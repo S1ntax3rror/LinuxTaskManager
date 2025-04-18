@@ -13,6 +13,17 @@ int is_number(const char *str) {
     return 1;
 }
 
+void read_stat(char* path) {
+    FILE *fp = fopen(path, "r"); // open file at path
+    if (fp) {
+        char stats[1024];
+        if (fgets(stats, sizeof(stats), fp)) { // read filed content and store in stats
+            printf("Stats: %s", stats);
+        }
+        fclose(fp);
+    }
+}
+
 int main() {
     struct dirent *entry; // create struct for directory entries
     printf("running Systemproclist\n");
@@ -28,17 +39,20 @@ int main() {
     while ((entry = readdir(dp))) { // loop through all entries in the directory
         if (is_number(entry->d_name)) { // check if enty is a number --> its a process
             char path[512];
+            char stat_path[512];
             snprintf(path, sizeof(path), "/proc/%s/comm",entry->d_name); // store /proc/PID/comm to path
+            snprintf(stat_path, sizeof(path), "/proc/%s/stat",entry->d_name); // store /proc/PID/stat to stat_path
 
             FILE *fp = fopen(path, "r"); // open file at path
             if (fp) {
                 char name[256];
-                if (fgets(name, sizeof(name), fp)) { // 
+                if (fgets(name, sizeof(name), fp)) { // read file content and store in name
                     printf(name);
                     printf("PID: %s\tName: %s", entry->d_name, name);
                 }
                 fclose(fp);
             }
+            read_stat(stat_path);
 
         }
     }
