@@ -5,6 +5,7 @@
 #include <sys/stat.h> 
 #include <dirent.h>
 #include <ctype.h>
+#include <string.h>
 
 int is_number(const char *str) {
     for (int i = 0; str[i]; i++) {
@@ -43,21 +44,21 @@ int main() {
             char path[512];
             char stat_path[512];
             snprintf(path, sizeof(path), "/proc/%s/comm",entry->d_name); // store /proc/PID/comm to path
-            snprintf(stat_path, sizeof(path), "/proc/%s/stat",entry->d_name); // store /proc/PID/stat to stat_path
+            snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat",entry->d_name); // store /proc/PID/stat to stat_path
 
             FILE *fp = fopen(path, "r"); // open file at path
             if (fp) {
                 char name[256];
                 if (fgets(name, sizeof(name), fp)) { // read file content and store in name
-                    printf(name);
                     printf("PID: %s\tName: %s", entry->d_name, name);
                 }
                 fclose(fp);
             }
             read_stat(stat_path);
-
         }
     }
+
+    read_stat("/proc/stat");
 
     closedir(dp);
     return 0;
