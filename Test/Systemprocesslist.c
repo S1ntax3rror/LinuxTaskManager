@@ -35,6 +35,8 @@ int main() {
         return 1;
     }
     
+    // todo read stat file
+
     
     while ((entry = readdir(dp))) { // loop through all entries in the directory
         if (is_number(entry->d_name)) { // check if enty is a number --> its a process
