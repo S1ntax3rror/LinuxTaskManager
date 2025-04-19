@@ -12,7 +12,7 @@ struct dirent *entry; // create struct for directory entries
 
 typedef struct proc_stat { // create struct for storing process data
     int pid;
-    char comm[256];
+    char comm[512];
     char state;
     int ppid;
     int pgrp;
@@ -32,10 +32,39 @@ typedef struct proc_stat { // create struct for storing process data
     long nice;
     long num_threads;
     long itrealvalue;
-    unsigned long starttime;
+    unsigned long long starttime;
     unsigned long vsize;
     long rss;
+    unsigned long rsslim;
+    unsigned long startcode;
+    unsigned long endcode;
+    unsigned long startstack;
+    unsigned long kstkesp;
+    unsigned long kstkeip;
+    unsigned long signal;
+    unsigned long blocked;
+    unsigned long sigignore;
+    unsigned long sigcatch;
+    unsigned long wchan;
+    unsigned long nswap;
+    unsigned long cnswap;
+    int exit_signal;
+    int processor;
+    unsigned int rt_priority;
+    unsigned int policy;
+    unsigned long long delayacct_blkio_ticks;
+    unsigned long guest_time;
+    long cguest_time;
+    unsigned long start_data;
+    unsigned long end_data;
+    unsigned long start_brk;
+    unsigned long arg_start;
+    unsigned long arg_end;
+    unsigned long env_start;
+    unsigned long env_end;
+    int exit_code;
 } proc_stat;
+    
 
 
 int is_number(const char *str) {
@@ -90,7 +119,6 @@ void read_stat(char* path) {
         if (fgets(stats, sizeof(stats), fp)) { // read filed content and store in stats
             printf("Stats: %s", stats);
         }
-
         fclose(fp);
     }
 }
