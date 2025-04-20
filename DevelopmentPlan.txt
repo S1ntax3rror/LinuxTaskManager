@@ -1,0 +1,57 @@
+LinuxTaskManager Development Plan
+
+Objectives:
+1. Implement a robust C library (`liblmtcore`) that parses /proc data into `proc_stat` structs.
+2. Build an interactive ANSI-based CLI for real-time monitoring and control.
+3. Develop a background daemon to serve process data over a UNIX socket in JSON.
+4. Create a Spring Boot service exposing REST endpoints for process data.
+5. Design a Thymeleaf-based web dashboard with live updates and controls.
+
+Phases & Tasks:
+
+Phase 1: Core Parser & Unit Tests  
+- Complete `split_stat_line()` to tokenize `/proc/[pid]/stat`, handling parentheses.
+- Implement `lmt_enumerate_processes()` in `parse_proc.c` to build `proc_stat *` arrays.
+- Write unit tests in `c-core/tests/test_parse.c` covering typical and edge-case stat lines.
+- Run `ctest` and iterate until parsing is 100% reliable.
+
+Phase 2: Interactive CLI  
+- In `c-cli/src/main.c`, call `lmt_enumerate_processes()` and print a simple ASCII table (PID, COMM, CPU%, RSS).
+- Add command-line options for sorting (`--sort=cpu|mem`), filtering (`--state=S|R`), and refresh interval.
+- Integrate ANSI escape codes for smooth redraw loops and interactive keybindings (`k` to kill, `r` to renice).
+- Test manually over SSH and on headless servers.
+
+Phase 3: Sleeper Detection & Resource Limits  
+- Define criteria in `sleeper.c` (e.g. state ‘S’ + RSS > threshold).  
+- Expose `lmt_find_sleepers()` API and CLI flag `--sleepers` to list flagged processes.
+- Add unit tests for sleeper detection logic.
+
+Phase 4: JSON Daemon 
+- Choose and integrate a small C JSON library (cJSON or parson).
+- Implement `daemon.c` to:
+   • Daemonize the process.
+   • Poll `liblmtcore` at configurable intervals.
+   • Listen on a UNIX socket and parse simple HTTP-like requests.
+   • Serve JSON for `/processes` and `/processes/{pid}`.
+- Write integration tests using `curl --unix-socket` to verify JSON output.
+
+Phase 5: Spring Boot REST API 
+- In `java-service`, build `LmtClient` to read from the UNIX socket (or shell out to `lmt-cli --json`).
+- Define `ProcessDto` matching `proc_stat` fields.
+- Create `ProcessController` with `/api/processes` and `/api/processes/{pid}` endpoints.
+- Configure connection parameters in `application.yml`.
+- Write integration tests (MockMvc) to verify API responses.
+
+Phase 6: Thymeleaf Web UI  
+- Scaffold `web-ui` with `index.html` and fragments (`process_row.html`, `header.html`).
+- Write JavaScript to fetch `/api/processes` every second and re-render the table.
+- Add buttons for Kill and Renice actions (POST to corresponding API endpoints).
+- Style with CSS for readability and state highlighting.
+- Conduct usability testing and refine UI interactions.
+
+Phase 7: Packaging & Deployment  
+- Create `docker-compose.yml` to launch `c-daemon`, `java-service`, and `web-ui`.
+- Write Dockerfiles for each component.
+- Document build & run steps in `README.md`.
+- Final end-to-end testing in a clean environment.
+
