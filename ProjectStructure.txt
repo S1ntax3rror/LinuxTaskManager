@@ -1,0 +1,51 @@
+/ (repo root)
+
+# Core parsing library: reads and parses /proc data into C structs
+├── c-core/                
+│   ├── include/           # Public headers
+│   │   └── lmtcore.h      # proc_stat, API prototypes
+│   ├── src/               # Implementation
+│   │   ├── parse_proc.c   # reading /proc/[pid]/stat, /proc/stat
+│   │   ├── sleeper.c      # detect sleepers by state+thresholds
+│   │   └── utils.c        # is_number(), split_stat_line(), read_stat()
+│   ├── tests/             # Unit tests (mocked stat lines)
+│   │   └── test_parse.c
+│   └── CMakeLists.txt     # Build `liblmtcore.a` + tests
+
+# Interactive CLI: live, ANSI-based terminal UI for process monitoring
+├── c-cli/                 
+│   ├── src/               
+│   │   └── main.c         # redraw loop, interactive commands (kill, renice)
+│   └── CMakeLists.txt     # Links against `lmtcore`
+
+# Background service: polls liblmtcore and exposes a JSON API over UNIX socket
+├── c-daemon/              
+│   ├── src/
+│   │   └── daemon.c       # poll lmtcore, serve JSON over UNIX socket
+│   └── CMakeLists.txt
+
+# REST API backend: Spring Boot service exposing process data to front-end
+├── java-service/          
+│   ├── src/
+│   │   ├── main/java/com/example/lmt/
+│   │   │   ├── LmtApplication.java
+│   │   │   ├── controller/ ProcessController.java   # /api/processes endpoints
+│   │   │   ├── service/    LmtClient.java           # calls UNIX socket or CLI
+│   │   │   └── model/      ProcessDto.java          # maps to proc_stat fields
+│   │   └── resources/
+│   │       └── application.yml  # socket path, poll intervals
+│   └── pom.xml or build.gradle
+
+# Front-end templates & assets: Thymeleaf HTML, CSS, and JS for dashboard
+├── web-ui/                
+│   ├── src/main/resources/
+│   │   ├── templates/
+│   │   │   ├── index.html       # main dashboard
+│   │   │   ├── fragments/       # process row, header, modals
+│   │   └── static/
+│   │       ├── css/             # custom styles
+│   │       └── js/              # AJAX refresh, kill/renice calls
+│   └── Dockerfile             # bundles into WAR with Spring Boot
+
+├── docker-compose.yml     # Orchestrates c-daemon, java-service, and web-ui
+└── README.md              # High-level overview + build & run instructions
