@@ -12,3 +12,8 @@ A complete, modular Linux process monitor & manager with C core, ANSI‑CLI, JSO
 ## Planned Project Structure
 We have made a first plan for the Code Structure of our Linux Task Manager Project - it is available under:
 https://github.com/S1ntax3rror/LinuxTaskManager/blob/main/ProjectStructure.txt
+
+## Development Plan
+A detailed development plan is available under:
+https://github.com/S1ntax3rror/LinuxTaskManager/blob/main/DevelopmentPlan.txt
+The plan is not completely fixed but gives us a guideline on how we could approach this more complex project
