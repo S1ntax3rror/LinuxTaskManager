@@ -11,9 +11,7 @@ A complete, modular Linux process monitor & manager with C core, ANSI‑CLI, JSO
 
 ## Planned Project Structure
 / (repo root)
-
-# Core parsing library: reads and parses /proc data into C structs
-├── c-core/                
+├── c-core/                # Core parsing library: reads and parses /proc data into C structs
 │   ├── include/           # Public headers
 │   │   └── lmtcore.h      # proc_stat, API prototypes
 │   ├── src/               # Implementation
@@ -21,43 +19,34 @@ A complete, modular Linux process monitor & manager with C core, ANSI‑CLI, JSO
 │   │   ├── sleeper.c      # detect sleepers by state+thresholds
 │   │   └── utils.c        # is_number(), split_stat_line(), read_stat()
 │   ├── tests/             # Unit tests (mocked stat lines)
-│   │   └── test_parse.c
-│   └── CMakeLists.txt     # Build `liblmtcore.a` + tests
-
-# Interactive CLI: live, ANSI-based terminal UI for process monitoring
-├── c-cli/                 
-│   ├── src/               
-│   │   └── main.c         # redraw loop, interactive commands (kill, renice)
-│   └── CMakeLists.txt     # Links against `lmtcore`
-
-# Background service: polls liblmtcore and exposes a JSON API over UNIX socket
-├── c-daemon/              
+│   │   └── test_parse.c   # test parsing logic
+│   └── CMakeLists.txt     # Build liblmtcore.a + tests
+├── c-cli/                 # Interactive CLI: live, ANSI-based terminal UI
 │   ├── src/
-│   │   └── daemon.c       # poll lmtcore, serve JSON over UNIX socket
-│   └── CMakeLists.txt
-
-# REST API backend: Spring Boot service exposing process data to front-end
-├── java-service/          
+│   │   └── main.c         # redraw loop, interactive commands (kill, renice)
+│   └── CMakeLists.txt     # Links against liblmtcore
+├── c-daemon/              # Background service: polls liblmtcore, serves JSON API
+│   ├── src/
+│   │   └── daemon.c       # poll liblmtcore, serve JSON over UNIX socket
+│   └── CMakeLists.txt     # Build lmt-daemon
+├── java-service/          # Spring Boot REST API backend
 │   ├── src/
 │   │   ├── main/java/com/example/lmt/
 │   │   │   ├── LmtApplication.java
-│   │   │   ├── controller/ ProcessController.java   # /api/processes endpoints
-│   │   │   ├── service/    LmtClient.java           # calls UNIX socket or CLI
-│   │   │   └── model/      ProcessDto.java          # maps to proc_stat fields
+│   │   │   ├── controller/ProcessController.java  # /api/processes endpoints
+│   │   │   ├── service/LmtClient.java            # calls UNIX socket or CLI
+│   │   │   └── model/ProcessDto.java             # maps to proc_stat fields
 │   │   └── resources/
-│   │       └── application.yml  # socket path, poll intervals
-│   └── pom.xml or build.gradle
-
-# Front-end templates & assets: Thymeleaf HTML, CSS, and JS for dashboard
-├── web-ui/                
+│   │       └── application.yml   # socket path, poll intervals
+│   └── pom.xml or build.gradle   # Build configuration
+├── web-ui/                # Thymeleaf front-end templates & assets
 │   ├── src/main/resources/
 │   │   ├── templates/
-│   │   │   ├── index.html       # main dashboard
-│   │   │   ├── fragments/       # process row, header, modals
+│   │   │   ├── index.html      # main dashboard page
+│   │   │   └── fragments/      # reusable UI components (rows, modals)
 │   │   └── static/
-│   │       ├── css/             # custom styles
-│   │       └── js/              # AJAX refresh, kill/renice calls
-│   └── Dockerfile             # bundles into WAR with Spring Boot
-
+│   │       ├── css/            # custom styles
+│   │       └── js/             # AJAX refresh, kill/renice calls
+│   └── Dockerfile              # bundles into WAR with Spring Boot
 ├── docker-compose.yml     # Orchestrates c-daemon, java-service, and web-ui
-└── README.md              # High-level overview + build & run instructions
+└── README.md              # Project overview & build & run instructions
