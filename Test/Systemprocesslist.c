@@ -134,7 +134,7 @@ void set_field_in_proc_stat(proc_stat* stat_container, int index, char* value){
     switch (index)
     {
     case 0: stat_container->pid = atoi(value); break; // int pid;
-    case 1: strncpy(stat_container->comm, value, sizeof(stat_container->comm) - 1); break;//     char comm[512];
+    case 1: strncpy(stat_container->comm, value, sizeof(stat_container->comm) - 1); printf("%s\n\n", value); break; // char comm[512];
     case 2: stat_container->state = value[0]; break; // char state;
     case 3: stat_container->ppid = atoi(value); break; //int ppid;
     case 4: stat_container->pgrp = atoi(value); break; // int pgrp;
@@ -190,7 +190,7 @@ void set_field_in_proc_stat(proc_stat* stat_container, int index, char* value){
     }
 }
 
-char **split_PID_stat_string(char* inp_string, int* num_strings, proc_stat* stat_pointer){
+void split_PID_stat_string(char* inp_string, proc_stat* stat_pointer){
     printf("%s", inp_string);
     
     proc_stat storage;
@@ -212,12 +212,9 @@ char **split_PID_stat_string(char* inp_string, int* num_strings, proc_stat* stat
             }
         } else {
             if (c == space){ // reset substring
-                printf("SPACE");
-                printf("%s", substring);
+                //printf("SPACE");
+                //printf("%s", substring);
                 
-                if (counter == 1){
-                    strncpy(stat_pointer->comm, substring, sizeof(stat_pointer->comm) - 1);
-                }
                 set_field_in_proc_stat(stat_pointer, counter, substring);
                 substring[0] = '\0';
                 substring_index = 0;
@@ -236,12 +233,11 @@ char **split_PID_stat_string(char* inp_string, int* num_strings, proc_stat* stat
     //printf("%s", substring);
 }
 
-void read_stat(char* path) {
+void read_stat(char* path, char* data_ptr) {
     FILE *fp = fopen(path, "r"); // open file at path
     if (fp) {
-        char stats[1024];
-        if (fgets(stats, sizeof(stats), fp)) { // read filed content and store in stats
-            printf("Stats: %s", stats);
+        if (fgets(data_ptr, sizeof(data_ptr), fp)) { // read filed content and store in data
+            // printf("Stats: %s", data_ptr);
         }
         fclose(fp);
     }
@@ -252,12 +248,6 @@ int main() {
     printf("running Systemproclist\n");
 
     int* num_str;
-    proc_stat test_stats;
-    
-    split_PID_stat_string("10350 (Isolated Web Co) S 3159 2417 2417 0 -1 4194560 9091 0 0 0 98 57 0 0 20 0 27 0 12842354 2505527296 26227 18446744073709551615 109946429318016 109946430173008 140726263227568 0 0 0 0 69634 1082134264 0 0 0 17 1 0 0 0 0 0 109946430188120 109946430188240 109946756247552 140726263234789 140726263235299 140726263235299 140726263242701 0\n", num_str, &test_stats);
-    printf("\n\n\n\n ptr reff worked:: %s \n\n\n\n", test_stats.comm);
-    print_proc_stat(&test_stats);
-    return 1;
     
     DIR *dp = opendir("/proc"); // open proc directory
     if (dp == NULL) {           // make sure it is opened correctly
@@ -277,15 +267,19 @@ int main() {
             if (fp) {
                 char name[256];
                 if (fgets(name, sizeof(name), fp)) { // read file content and store in name
-                    printf("PID: %s\tName: %s", entry->d_name, name);
+                    //printf("PID: %s\tName: %s", entry->d_name, name);
                 }
                 fclose(fp);
             }
-            read_stat(stat_path);
+            char file_data[2048];
+            proc_stat stats_container;
+            read_stat(stat_path, file_data);
+            split_PID_stat_string(file_data, &stats_container);
+            print_proc_stat(&stats_container);
         }
     }
 
-    read_stat("/proc/stat");
+    //read_stat("/proc/stat");
 
     closedir(dp);
     return 0;
