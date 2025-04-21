@@ -1,0 +1,60 @@
+/* =========================================================================
+ *  Custom Linux Task‑Manager — Core Data Structures
+ *  These structs live in a .h file and are refreshed once per screen redraw
+ *  by scanning /proc and a single read of /proc/stat.
+ * =========================================================================*/
+
+/* -------------------------------------------------------------------------
+ *  Snapshot of ONE process at the time of the last refresh
+ * -----------------------------------------------------------------------*/
+typedef struct ProcessInfo {
+    /* ---------- Identity (stable for the life of the process) ---------- */
+    pid_t pid;                  /* Kernel‑assigned process ID                        */
+    char  comm[256];            /* Executable name; kernel exposes up to 15 bytes    */
+    uid_t uid;                  /* Real user ID (translate to name with getpwuid)    */
+
+    /* ---------- Scheduling parameters ---------------------------------- */
+    char state;                 /* ‘R’, ‘S’, ‘D’, ‘T’, ‘Z’, ‘I’, …                   */
+    int  nice;                  /* User‑tunable bias: −20 (favoured) … +19 (deferred)*/
+    int  priority;              /* Kernel priority: 1‑99 RT or 100‑139 normal       */
+
+    /* ---------- Raw time counters (jiffies since boot) ------------------ */
+    unsigned long long utime;   /* CPU ticks in user mode                            */
+    unsigned long long stime;   /* CPU ticks in kernel mode                          */
+    unsigned long long start_time; /* First tick after fork/exec                    */
+
+    /* ---------- Derived, human‑friendly metrics ------------------------- */
+    double cpu_pct;             /* %CPU since previous refresh                       */
+    size_t rss_kb;              /* RAM actually resident (kB)                        */
+    size_t vsz_kb;              /* Total virtual address space (kB)                  */
+
+    /* ---------- Management hooks --------------------------------------- */
+    struct rlimit cpu_limit;    /* RLIMIT_CPU soft/hard values                       */
+    struct rlimit mem_limit;    /* RLIMIT_AS  soft/hard values                       */
+    bool   is_sleeper;          /* Our heuristic: true = “inactive yet hogging”      */
+} ProcessInfo;
+
+
+/* -------------------------------------------------------------------------
+ *  Dynamic array (“vector”) that holds the entire /proc snapshot
+ *  Reused between refreshes to minimise malloc/free churn.
+ * -----------------------------------------------------------------------*/
+typedef struct ProcessTable {
+    ProcessInfo *data;          /* Pointer to first ProcessInfo slot                 */
+    size_t       count;         /* How many slots are currently filled               */
+    size_t       cap;           /* How many slots are allocated                      */
+
+    /* ---------- Global book‑keeping for CPU% --------------------------- *
+     *  We store the host‑wide jiffy counter from the PREVIOUS scan so we
+     *  can do:
+     *      cpu_pct = Δ(proc_utime + proc_stime) / Δ(total_jiffies) * N_CPUS * 100
+     * -------------------------------------------------------------- */
+    unsigned long long host_jiffies_prev;
+} ProcessTable;
+
+/*  Notes:
+ *  •  All jiffy counters come directly from /proc/<pid>/stat or /proc/stat.
+ *  •  Convert jiffies to seconds with: seconds = ticks / sysconf(_SC_CLK_TCK).
+ *  •  The comm buffer is generous (256) in case you later decide to store
+ *     the full command path instead of the 15‑char kernel field.
+ */
