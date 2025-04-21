@@ -74,6 +74,13 @@ int is_number(const char *str) {
     return 1;
 }
 
+long get_file_size(FILE *fp) {
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+    rewind(fp); // reset to beginning
+    return size;
+}
+
 void print_proc_stat(proc_stat *stat_container) {
     printf("pid: %d\n", stat_container->pid);
     printf("comm: %s\n", stat_container->comm);
@@ -133,9 +140,9 @@ void print_proc_stat(proc_stat *stat_container) {
 void set_field_in_proc_stat(proc_stat* stat_container, int index, char* value){
     switch (index)
     {
-    case 0: stat_container->pid = atoi(value); break; // int pid;
-    case 1: strncpy(stat_container->comm, value, sizeof(stat_container->comm) - 1); printf("%s\n\n", value); break; // char comm[512];
-    case 2: stat_container->state = value[0]; break; // char state;
+    case 0: stat_container->pid = atoi(value); // int pid;
+    case 1: strncpy(stat_container->comm, value, sizeof(stat_container->comm) - 1); printf("converted string:: %s \n", stat_container->comm); break; // char comm[512];
+    case 2: stat_container->state = value[0]; printf("converted char:: %c :: value received: %s \n", stat_container->state, value); break; // char state;
     case 3: stat_container->ppid = atoi(value); break; //int ppid;
     case 4: stat_container->pgrp = atoi(value); break; // int pgrp;
     case 5: stat_container->session = atoi(value); break; // int session;
@@ -190,9 +197,7 @@ void set_field_in_proc_stat(proc_stat* stat_container, int index, char* value){
     }
 }
 
-void split_PID_stat_string(char* inp_string, proc_stat* stat_pointer){
-    printf("%s", inp_string);
-    
+void split_PID_stat_string(char* inp_string, proc_stat* stat_pointer){    
     proc_stat storage;
     char space = ' ';
     char bracket_open = '(';
@@ -209,19 +214,19 @@ void split_PID_stat_string(char* inp_string, proc_stat* stat_pointer){
         if (inside_bracket){  // skip spaces while in bracket
             if (c == bracket_close) {
                 inside_bracket = 0;
+                continue;
             }
         } else {
-            if (c == space){ // reset substring
-                //printf("SPACE");
-                //printf("%s", substring);
-                
+            if (c == space){ // reset substring                
                 set_field_in_proc_stat(stat_pointer, counter, substring);
+                printf("counter state: %i ::: substring ::: %s \n\n", counter, substring);
                 substring[0] = '\0';
-                substring_index = 0;
+                substring_index = -1;
                 counter += 1;
 
             } else if (c == bracket_open){ // keep brackets
                 inside_bracket = 1;
+                continue;
             }
         }
         substring[substring_index] = c;
@@ -231,13 +236,14 @@ void split_PID_stat_string(char* inp_string, proc_stat* stat_pointer){
         //printf("%c \n", c);
     }
     //printf("%s", substring);
+    set_field_in_proc_stat(stat_pointer, counter, substring); // set final field
 }
 
-void read_stat(char* path, char* data_ptr) {
+void read_stat(char* path, char* data_ptr, int size) {
     FILE *fp = fopen(path, "r"); // open file at path
     if (fp) {
-        if (fgets(data_ptr, sizeof(data_ptr), fp)) { // read filed content and store in data
-            // printf("Stats: %s", data_ptr);
+        if (fgets(data_ptr, size, fp)) { // read filed content and store in data
+            //printf("Stats: %s \n", data_ptr);
         }
         fclose(fp);
     }
@@ -267,15 +273,17 @@ int main() {
             if (fp) {
                 char name[256];
                 if (fgets(name, sizeof(name), fp)) { // read file content and store in name
-                    //printf("PID: %s\tName: %s", entry->d_name, name);
+                    printf("PID: %s\tName: %s \n", entry->d_name, name);
                 }
                 fclose(fp);
             }
-            char file_data[2048];
             proc_stat stats_container;
-            read_stat(stat_path, file_data);
+            char file_data[3000];
+            read_stat(stat_path, file_data, 3000);
             split_PID_stat_string(file_data, &stats_container);
             print_proc_stat(&stats_container);
+            break;
+            
         }
     }
 
