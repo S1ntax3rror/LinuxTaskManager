@@ -69,16 +69,9 @@ typedef struct proc_stat { // create struct for storing process data
 
 int is_number(const char *str) {
     for (int i = 0; str[i]; i++) {
-        if (!isdigit(*str)) return 0;
+        if (!isdigit(str[i])) return 0;
     }
     return 1;
-}
-
-long get_file_size(FILE *fp) {
-    fseek(fp, 0, SEEK_END);
-    long size = ftell(fp);
-    rewind(fp); // reset to beginning
-    return size;
 }
 
 void print_proc_stat(proc_stat *stat_container) {
