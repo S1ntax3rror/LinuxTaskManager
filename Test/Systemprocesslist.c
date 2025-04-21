@@ -141,8 +141,8 @@ void set_field_in_proc_stat(proc_stat* stat_container, int index, char* value){
     case 5: stat_container->session = atoi(value); break; // int session;
     case 6: stat_container->tty_nr = atoi(value); break; // int tty_nr;
     case 7: stat_container->tpgid = atoi(value); break; // int tpgid;
-    case 8:  stat_container->flags = strtoul(value, NULL, 10); break; // unsigned int flags;
-    case 9:  stat_container->minflt = strtoul(value, NULL, 10); break; // unsigned long minflt;
+    case 8: stat_container->flags = strtoul(value, NULL, 10); break; // unsigned int flags;
+    case 9: stat_container->minflt = strtoul(value, NULL, 10); break; // unsigned long minflt;
     case 10: stat_container->cminflt = strtoul(value, NULL, 10); break; // unsigned long cminflt;
     case 11: stat_container->majflt = strtoul(value, NULL, 10); break; // unsigned long majflt;
     case 12: stat_container->cmajflt = strtoul(value, NULL, 10); break;// unsigned long cmajflt;
