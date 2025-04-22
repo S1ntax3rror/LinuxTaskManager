@@ -17,3 +17,11 @@ https://github.com/S1ntax3rror/LinuxTaskManager/blob/main/ProjectStructure.txt
 A detailed development plan is available under:
 https://github.com/S1ntax3rror/LinuxTaskManager/blob/main/DevelopmentPlan.txt
 The plan is not completely fixed but gives us a guideline on how we could approach this more complex project
+
+## TODO:
+
+### Backend
+
+#### Query data
+- distinguish root and user process
+- read proc / stat file

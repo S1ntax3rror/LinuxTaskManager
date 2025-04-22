@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include "proc_stat.h"
 #include "utils.h"
+#include "general_stat_query.h"
 
 
 struct dirent *entry; // create struct for directory entries
@@ -18,10 +19,15 @@ int main() {
         printf("/proc open error");
         return 1;
     }
+    char* stat_data = read_general_stat("/proc/stat");
+    printf("%s\n", stat_data);
+    general_stat general_stat_container;
+    split_general_stat_string(stat_data, &general_stat_container);
+    return 0; // TODO remove before merge
+
     int num_folders = count_folders("/proc"); // INITIALIZE LIST WITH ENOUGH SPACE FOR ALL PROCESS STATS
     printf("%i folders in /proc. Allocating space for %i potential stat lists. \n", num_folders, num_folders);
-    proc_stat process_statistics_array[num_folders];
-
+    proc_stat process_statistics_array[num_folders];    
     int current_list_entry_index = 0;
     
     while ((entry = readdir(dp))) { // loop through all entries in the directory
@@ -54,9 +60,6 @@ int main() {
     }
 
     print_proc_stat(&process_statistics_array[current_list_entry_index-10]);
-
-    
-    //read_stat("/proc/stat"); // TODO read general system stats
 
     closedir(dp);
     return 0;

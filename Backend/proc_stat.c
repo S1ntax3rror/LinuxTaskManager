@@ -165,10 +165,8 @@ void split_PID_stat_string(char* inp_string, proc_stat* stat_pointer){
 
 void read_stat(char* path, char* data_ptr, int size) {
     FILE *fp = fopen(path, "r"); // open file at path
-    if (fp) {
-        if (fgets(data_ptr, size, fp)) { // read filed content and store in data
-            //printf("Stats: %s \n", data_ptr);
-        }
+    if (fp) { // if file exists, read data
+        fgets(data_ptr, size, fp);
         fclose(fp);
     }
 }
