@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <unistd.h>
+#include <string.h>
+
 #include "proc_stat.h"
 #include "utils.h"
 #include "general_stat_query.h"
+#include "cpu_usage.h"
 
-
+#define MAX_PROCS 2048
 struct dirent *entry; // create struct for directory entries
 
 
@@ -24,14 +28,14 @@ int main() {
     general_stat general_stat_container;
     split_general_stat_string(stat_data, &general_stat_container);
     print_general_stat(&general_stat_container);
-    return 0; // TODO remove before merge
+    //return 0; // TODO remove before merge
 
     int num_folders = count_folders("/proc"); // INITIALIZE LIST WITH ENOUGH SPACE FOR ALL PROCESS STATS
     printf("%i folders in /proc. Allocating space for %i potential stat lists. \n", num_folders, num_folders);
     proc_stat process_statistics_array[num_folders];    
     int current_list_entry_index = 0;
     
-    while ((entry = readdir(dp))) { // loop through all entries in the directory
+/*    while ((entry = readdir(dp))) { // loop through all entries in the directory
         if (is_number(entry->d_name)) { // check if enty is a number --> its a process
 
             char path[512];
@@ -63,5 +67,59 @@ int main() {
     print_proc_stat(&process_statistics_array[current_list_entry_index-10]);
 
     closedir(dp);
-    return 0;
+*/    
+
+    
+    proc_stat before_stats[MAX_PROCS];
+    proc_stat after_stats[MAX_PROCS];
+    int pids[MAX_PROCS];
+    int proc_count = 0;
+    
+    
+    while ((entry = readdir(dp))) {
+        if (is_number(entry->d_name)) {
+            char stat_path[512];
+            snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat", entry->d_name);
+
+            char file_data[3000];
+            read_stat(stat_path, file_data, sizeof(file_data));
+
+            proc_stat snapshot;
+            split_PID_stat_string(file_data, &snapshot);
+
+            before_stats[proc_count] = snapshot;
+            pids[proc_count] = atoi(entry->d_name);
+            proc_count++;
+
+            if (proc_count >= MAX_PROCS) break;
+        }
+    }
+    closedir(dp);
+
+    sleep(1);  // ---------- Time Interval (1s) ----------
+
+    // ---------- Second Snapshot + CPU Calculation ----------
+    for (int i = 0; i < proc_count; i++) {
+        char stat_path[512];
+        snprintf(stat_path, sizeof(stat_path), "/proc/%d/stat", pids[i]);
+
+        char file_data[3000];
+        FILE *fp = fopen(stat_path, "r");
+        if (!fp) continue; // process may have exited
+        fclose(fp);
+
+        read_stat(stat_path, file_data, sizeof(file_data));
+        split_PID_stat_string(file_data, &after_stats[i]);
+
+        calculate_normalized_cpu_usage(&before_stats[i], &after_stats[i], 1.0);
+
+        if (after_stats[i].cpu_percent > 0.1) {  // skip idle processes
+            printf("PID: %d\tCPU: %.2f%%\tName: %s\n",
+                   after_stats[i].pid,
+                   after_stats[i].cpu_percent,
+                   after_stats[i].comm);
+        }
+    }
+
+return 0;
 }

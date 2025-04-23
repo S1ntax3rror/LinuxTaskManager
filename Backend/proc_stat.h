@@ -59,6 +59,8 @@ typedef struct proc_stat { // create struct for storing process data
     unsigned long env_start;
     unsigned long env_end;
     int exit_code;
+    
+    double cpu_percent;
 } proc_stat;
     
 
