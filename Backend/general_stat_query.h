@@ -25,12 +25,13 @@ typedef struct cpu_stats
 typedef struct general_stat { // create struct for storing process data
     cpu_stats cpu;
     cpu_stats cores[100];
-    uint64_t iter_0;
+    uint64_t intr_0;
     uint64_t ctxt;
     uint64_t btime;
     uint64_t processes;
     uint64_t procs_running;
     uint64_t procs_blocked;
+    int num_cpus;
     // add more if needed
 } general_stat;
     

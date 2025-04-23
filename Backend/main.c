@@ -23,6 +23,7 @@ int main() {
     //printf("%s\n", stat_data);
     general_stat general_stat_container;
     split_general_stat_string(stat_data, &general_stat_container);
+    print_general_stat(&general_stat_container);
     return 0; // TODO remove before merge
 
     int num_folders = count_folders("/proc"); // INITIALIZE LIST WITH ENOUGH SPACE FOR ALL PROCESS STATS

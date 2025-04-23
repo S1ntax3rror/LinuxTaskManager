@@ -3,18 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-void print_general_stat(general_stat *stat_container){
-    printf("To be implemented");
-};
-
-
-void set_field_in_general_stat(general_stat* stat_container, int index, char* value){
-    printf("to be implemented");
-};
-
 
 void print_cpu_stats(cpu_stats* cpu_container) {
-    printf("name: %s\n", cpu_container->name);
+    printf("\nname: %s\n\n", cpu_container->name);
     printf("nice: %ld\n", cpu_container->nice);
     printf("system: %ld\n", cpu_container->system);
     printf("idle: %ld\n", cpu_container->idle);
@@ -23,6 +14,53 @@ void print_cpu_stats(cpu_stats* cpu_container) {
     printf("steal: %ld\n", cpu_container->steal);
     printf("guest: %ld\n", cpu_container->guest);
     printf("guest_nice: %ld\n", cpu_container->guest_nice);
+}
+
+
+void print_cpu_stats_one_line(cpu_stats* cpu_container) {
+    printf("name: %s    ", cpu_container->name);
+    printf("nice: %ld    ", cpu_container->nice);
+    printf("system: %ld    ", cpu_container->system);
+    printf("idle: %ld    ", cpu_container->idle);
+    printf("iowait: %ld    ", cpu_container->iowait);
+    printf("irq: %ld    ", cpu_container->irq);
+    printf("steal: %ld    ", cpu_container->steal);
+    printf("guest: %ld    ", cpu_container->guest);
+    printf("guest_nice: %ld\n", cpu_container->guest_nice);
+}
+
+
+void print_general_stat(general_stat *stat_container){
+    printf("General CPU stats:\n");
+    print_cpu_stats(&stat_container->cpu);
+
+    printf("\nCore specific CPU stats: \n\n");
+    for (int i = 0; i < stat_container->num_cpus; i++) {
+        print_cpu_stats_one_line(&stat_container->cores[i]);
+    }
+
+    printf("Interrupts: %li\n", stat_container->intr_0);
+    printf("Context Switches: %li\n", stat_container->ctxt);
+    printf("Boot Time: %li\n", stat_container->btime);
+    printf("Processes: %li\n", stat_container->processes);
+    printf("Running Processes: %li\n", stat_container->procs_running);
+    printf("Blocked Processes: %li\n", stat_container->procs_blocked);
+    printf("Number of CPUs: %i\n", stat_container->num_cpus);
+};
+
+
+char* get_seccond_arg(char* string_inp, int first_word_offset){
+    int jj = first_word_offset;
+    int ii = 0;
+    char* num_str = (char*) malloc(200);
+    while (string_inp[jj] != ' '){
+        num_str[ii] = string_inp[jj];
+        jj++;
+        ii++;
+    }
+    num_str[ii+1] = '\0';
+
+    return num_str;
 }
 
 
@@ -83,29 +121,52 @@ void split_general_stat_string(char* inp_string, general_stat* stat_pointer){
                 strncpy(firstThree, line, 3);
                 firstThree[3] = '\0';
 
-                char firstThree[4]; // get first 3 chars of string (to check if its a cpu stat thingy)
-                strncpy(firstThree, line, 3);
-                firstThree[3] = '\0';
+                int w_count = 0; while (line[w_count] != ' '){w_count++;} // get size of first word
+                char first_word[w_count+1];
+                strncpy(first_word, line, w_count);
+                first_word[w_count] = '\0';
+
+                //printf("first word: %s \n", first_word);
 
                 if (strcmp(firstThree, "cpu") == 0 || strcmp(firstThree, "cpu ") == 0){
-                    printf("%s \n", line);
+                    //printf("line:: %s \n cpu count :: %i\n", line, cpu_count);
                     cpu_stats cpu_stats_container;
                     set_cpu(line, &cpu_stats_container);
-                    print_cpu_stats(&cpu_stats_container);
 
-                    if (line[4] == ' '){
+                    if (line[3] == ' '){
                         stat_pointer->cpu = cpu_stats_container;
                     } else {
                         stat_pointer->cores[cpu_count] = cpu_stats_container;
                         cpu_count++;
+                        //print_cpu_stats(&cpu_stats_container);
                     }
+                } else if (strcmp(first_word, "intr") == 0) {
+                    char* num_str = get_seccond_arg(line, 5); 
+                    stat_pointer->intr_0 = atoi(num_str);
+                } else if (strcmp(first_word, "ctxt") == 0) {
+                    char* num_str = get_seccond_arg(line, 5); 
+                    stat_pointer->ctxt = atoi(num_str);
+                } else if (strcmp(first_word, "btime") == 0) {
+                    char* num_str = get_seccond_arg(line, 6);
+                    stat_pointer->btime = atoi(num_str);
+                } else if (strcmp(first_word, "processes") == 0) {
+                    char* num_str = get_seccond_arg(line, 10); 
+                    stat_pointer->processes = atoi(num_str);
+                } else if (strcmp(first_word, "procs_running") == 0) {
+                    char* num_str = get_seccond_arg(line, 14);
+                    stat_pointer->procs_running = atoi(num_str);
+                } else if (strcmp(first_word, "procs_blocked") == 0) {
+                    char* num_str = get_seccond_arg(line, 14);
+                    stat_pointer->procs_blocked = atoi(num_str);
+                } else {
+                    
                 }
             }
-
         }
         line[i-offset] = inp_string[i];
         
     }
+    stat_pointer->num_cpus = cpu_count;
     //printf("not printed stuff %s", line);
 };
 
