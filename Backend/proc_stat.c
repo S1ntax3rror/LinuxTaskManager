@@ -63,7 +63,7 @@ void print_proc_stat(proc_stat *stat_container) {
 void set_field_in_proc_stat(proc_stat* stat_container, int index, char* value){
     switch (index)
     {
-    case 0: stat_container->pid = atoi(value); // int pid;
+    case 0: stat_container->pid = atoi(value); break; // int pid;
     case 1: strncpy(stat_container->comm, value, sizeof(stat_container->comm) - 1); break; // char comm[512];
     case 2: stat_container->state = value[0]; break; // char state;
     case 3: stat_container->ppid = atoi(value); break; //int ppid;
@@ -115,8 +115,7 @@ void set_field_in_proc_stat(proc_stat* stat_container, int index, char* value){
     case 49: stat_container->env_start = strtoul(value, NULL, 10); break; // unsigned long env_start;
     case 50: stat_container->env_end = strtoul(value, NULL, 10); break; // unsigned long env_end;
     case 51: stat_container->exit_code = atoi(value); break; // int exit_code;
-    default:
-        break;
+    default: break;
     }
 }
 

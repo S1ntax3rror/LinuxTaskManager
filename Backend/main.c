@@ -20,7 +20,7 @@ int main() {
         return 1;
     }
     char* stat_data = read_general_stat("/proc/stat");
-    printf("%s\n", stat_data);
+    //printf("%s\n", stat_data);
     general_stat general_stat_container;
     split_general_stat_string(stat_data, &general_stat_container);
     return 0; // TODO remove before merge
