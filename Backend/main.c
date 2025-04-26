@@ -8,6 +8,7 @@
 #include "utils.h"
 #include "general_stat_query.h"
 #include "cpu_usage.h"
+#include "memory_stats.h"
 
 #define MAX_PROCS 2048
 struct dirent *entry; // create struct for directory entries
@@ -23,6 +24,16 @@ int main() {
         printf("/proc open error");
         return 1;
     }
+    memory_stats meminfo;
+    read_memory_stats(&meminfo);
+
+    printf("\nSystem Memory Stats:\n");
+    printf("Total: %.2f MB\n", meminfo.mem_total_kb / 1024.0);
+    printf("Free: %.2f MB\n", meminfo.mem_free_kb / 1024.0);
+    printf("Available: %.2f MB\n", meminfo.mem_available_kb / 1024.0);
+    printf("Buffers: %.2f MB\n", meminfo.buffers_kb / 1024.0);
+    printf("Cached: %.2f MB\n\n", meminfo.cached_kb / 1024.0);
+    
     char* stat_data = read_general_stat("/proc/stat");
     //printf("%s\n", stat_data);
     general_stat general_stat_container;
