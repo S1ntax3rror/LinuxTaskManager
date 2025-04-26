@@ -61,6 +61,7 @@ typedef struct proc_stat { // create struct for storing process data
     int exit_code;
     
     double cpu_percent;
+    double ram_percent;
 } proc_stat;
     
 

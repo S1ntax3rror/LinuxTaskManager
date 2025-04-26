@@ -26,6 +26,7 @@ int main() {
     }
     memory_stats meminfo;
     read_memory_stats(&meminfo);
+    long page_size = sysconf(_SC_PAGESIZE);
 
     printf("\nSystem Memory Stats:\n");
     printf("Total: %.2f MB\n", meminfo.mem_total_kb / 1024.0);
@@ -97,6 +98,10 @@ int main() {
 
             proc_stat snapshot;
             split_PID_stat_string(file_data, &snapshot);
+            
+            double ram_usage_percent = (snapshot.rss * page_size * 100.0) / (meminfo.mem_total_kb * 1024.0);
+
+            snapshot.ram_percent = ram_usage_percent;
 
             before_stats[proc_count] = snapshot;
             pids[proc_count] = atoi(entry->d_name);
@@ -129,6 +134,12 @@ int main() {
                    after_stats[i].pid,
                    after_stats[i].cpu_percent,
                    after_stats[i].comm);
+        }
+        if (before_stats[i].ram_percent > 0.5) {  // skip low ram usage
+            printf("PID: %d\tRAM: %.2f%%\tName: %s\n",
+                   before_stats[i].pid,
+                   before_stats[i].ram_percent,
+                   before_stats[i].comm);
         }
     }
 
