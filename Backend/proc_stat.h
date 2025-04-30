@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 
 typedef struct proc_stat { // create struct for storing process data
@@ -59,6 +60,10 @@ typedef struct proc_stat { // create struct for storing process data
     unsigned long env_start;
     unsigned long env_end;
     int exit_code;
+    
+    double cpu_percent;
+    double ram_percent;
+    uint64_t timestamp_ms;
 } proc_stat;
     
 
