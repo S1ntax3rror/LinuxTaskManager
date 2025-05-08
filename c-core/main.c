@@ -14,6 +14,7 @@
 #include "proc_entry.h"
 #include "timeline.h"
 #include "trimmed_info.h"
+#include "process_sort.h"
 
 #define MAX_PROCS 2048
 #define DOWN_TIME 2000000  //microseconds // 200000 for 200ms (to test i did 2000000 for 2s)
@@ -24,6 +25,10 @@ struct dirent *entry; // create struct for directory entries
 
 int main() {
     printf("running Systemproclist\n");
+    trimmed_info sorted_list[MAX_PROCS];
+    SortMode current_sort = SORT_BY_PID;            
+    int visible_count = 0; 
+
     proc_timeline* history = calloc(MAX_PROCS, sizeof(proc_timeline));
     if (!history) {
         perror("calloc failed");
@@ -100,12 +105,22 @@ int main() {
         }
     }
     closedir(dp);
-
+    int loopcount = 0;
     while(1){
 
     
             usleep(DOWN_TIME);  //Time Interval 
-
+            loopcount++;
+            if (loopcount == 5){
+                current_sort = SORT_BY_NAME;
+            }
+            if (loopcount == 10){
+                current_sort = SORT_BY_RAM;
+            }
+            if (loopcount == 15){
+                current_sort = SORT_BY_CPU;
+                loopcount = 0;
+            }
             read_memory_stats(&meminfo);
 
             
@@ -141,7 +156,7 @@ int main() {
             snapshot.ram_percent =
                 (snapshot.rss * page_size * 100.0) / (meminfo.mem_total_kb * 1024.0);
 
-            // 🔍 Check if this PID existed in before_info an valid
+            // 🔍 Check if this PID existed in before_info 
             int proc_index = -1;
 
             for (int i = 0; i < proc_count; i++) {
@@ -174,43 +189,41 @@ int main() {
         }
         closedir(dp2);
 
+         // Step 1: Flatten the latest snapshot into sorted_list
+        visible_count = 0;
+        for (int i = 0; i < proc_count; i++) {
+            int latest = (history[i].latest_index - 1 + MAX_TIMELINE) % MAX_TIMELINE;
+            trimmed_info* t = &history[i].timeline[latest];
+            if (t->pid == -1) continue;
+ 
+            sorted_list[visible_count++] = *t;
+        }
+ 
+         // Step 2: Sort only if sorting mode changed
+            switch (current_sort) {
+                case SORT_BY_CPU:     sort_by_cpu(sorted_list, visible_count); break;
+                case SORT_BY_RAM:     sort_by_ram(sorted_list, visible_count); break;
+                case SORT_BY_NAME:    sort_by_name(sorted_list, visible_count); break;
+                case SORT_BY_STATE:   sort_by_state(sorted_list, visible_count); break;
+                case SORT_BY_PID:     sort_by_pid(sorted_list, visible_count); break;
+                case SORT_BY_AVG_CPU: sort_by_avg_cpu(sorted_list, visible_count); break;
+            }
         
         printf("\033[H\033[J");  // Clear screen
         printf("Live Process Monitor (refresh: %.1f sec)\n\n", (double)DOWN_TIME / 1000000.0);
+        printf("Time\t\tCPU %%\tRAM %%\tPID\tName\n");
         
-        for (int i = 0; i < proc_count; i++) {
-            if (!processes[i].valid) continue;
-        
-            int pid = processes[i].pid;
-            printf("PID %d - %s\n", pid, processes[i].now_info.comm);
-            printf("Time(ms)\tCPU %%\tRAM %%\n");
-        
-            int count = 0;
-            int index = history[i].latest_index;
-        
-            // Print the last 5 entries (from newest to oldest)
-            for (int j = 0; j < 5; j++) {
-                int real_index = (index - 1 - j + MAX_TIMELINE) % MAX_TIMELINE;
-                trimmed_info* t = &history[i].timeline[real_index];
-        
-                if (t->pid == -1) continue;  // skip uninitialized
-
-
-        
-                printf("%llu\t%.2f\t%.2f\n",
-                       (unsigned long long)t->timestamp_ms,
-                       t->cpu_percent,
-                       t->ram_percent);
-        
-                count++;
-            }
-        
-            if (count == 0) {
-                printf("  No recent history.\n");
-            }
-        
-            printf("\n");
+        int to_display = visible_count > 10 ? 10 : visible_count;
+        for (int i = 0; i < to_display; i++) {
+            trimmed_info* t = &sorted_list[i];
+            printf("%s\t%.2f\t%.2f\t%d\t%s\n",
+                   t->time_str,
+                   t->cpu_percent,
+                   t->ram_percent,
+                   t->pid,
+                   t->comm);
         }
+       
 
     }
     
