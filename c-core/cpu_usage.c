@@ -1,4 +1,4 @@
-
+#include "timeline.h"
 #include "cpu_usage.h"
 #include <unistd.h>
 
@@ -12,4 +12,17 @@ void calculate_normalized_cpu_usage(proc_stat* before, proc_stat* after, double 
 
     double seconds_used = (double)delta_proc_time / clock_ticks;
     after->cpu_percent = 100.0 * (seconds_used / (interval_seconds * num_cores));
+}
+
+double calculate_avg_cpu_percent(proc_timeline* timeline) {
+    int count = 0;
+    double total = 0.0;
+
+    for (int i = 0; i < MAX_TIMELINE; i++) {
+        if (timeline->timeline[i].pid == -1) continue;  // skip uninitialized
+        total += timeline->timeline[i].cpu_percent;
+        count++;
+    }
+
+    return (count > 0) ? (total / count) : 0.0;
 }

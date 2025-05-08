@@ -105,22 +105,12 @@ int main() {
         }
     }
     closedir(dp);
-    int loopcount = 0;
+    int loopcount = 0;//for testing
     while(1){
 
     
             usleep(DOWN_TIME);  //Time Interval 
-            loopcount++;
-            if (loopcount == 5){
-                current_sort = SORT_BY_NAME;
-            }
-            if (loopcount == 10){
-                current_sort = SORT_BY_RAM;
-            }
-            if (loopcount == 15){
-                current_sort = SORT_BY_CPU;
-                loopcount = 0;
-            }
+            //sorting testing
             read_memory_stats(&meminfo);
 
             
@@ -196,29 +186,33 @@ int main() {
             trimmed_info* t = &history[i].timeline[latest];
             if (t->pid == -1) continue;
  
-            sorted_list[visible_count++] = *t;
+            sorted_list[visible_count] = *t;
+            sorted_list[visible_count].avg_cpu_percent = calculate_avg_cpu_percent(&history[i]);
+            visible_count++;
         }
  
-         // Step 2: Sort only if sorting mode changed
-            switch (current_sort) {
-                case SORT_BY_CPU:     sort_by_cpu(sorted_list, visible_count); break;
-                case SORT_BY_RAM:     sort_by_ram(sorted_list, visible_count); break;
-                case SORT_BY_NAME:    sort_by_name(sorted_list, visible_count); break;
-                case SORT_BY_STATE:   sort_by_state(sorted_list, visible_count); break;
-                case SORT_BY_PID:     sort_by_pid(sorted_list, visible_count); break;
-                case SORT_BY_AVG_CPU: sort_by_avg_cpu(sorted_list, visible_count); break;
-            }
+        current_sort = read_sort_mode_from_file("sort_mode.txt");
+        switch (current_sort) {
+            case SORT_BY_CPU:     sort_by_cpu(sorted_list, visible_count); break;
+            case SORT_BY_RAM:     sort_by_ram(sorted_list, visible_count); break;
+            case SORT_BY_NAME:    sort_by_name(sorted_list, visible_count); break;
+            case SORT_BY_STATE:   sort_by_state(sorted_list, visible_count); break;
+            case SORT_BY_PID:     sort_by_pid(sorted_list, visible_count); break;
+            case SORT_BY_PID_A:   sort_by_pid_a(sorted_list, visible_count); break;
+            case SORT_BY_AVG_CPU: sort_by_avg_cpu(sorted_list, visible_count); break;
+        }
         
         printf("\033[H\033[J");  // Clear screen
         printf("Live Process Monitor (refresh: %.1f sec)\n\n", (double)DOWN_TIME / 1000000.0);
-        printf("Time\t\tCPU %%\tRAM %%\tPID\tName\n");
+        printf("Time\t\tCPU%% \tA_CPU%%\tRAM %%\tPID\tName\n");
         
         int to_display = visible_count > 10 ? 10 : visible_count;
         for (int i = 0; i < to_display; i++) {
             trimmed_info* t = &sorted_list[i];
-            printf("%s\t%.2f\t%.2f\t%d\t%s\n",
+            printf("%s\t%.2f\t%.2f\t%.2f\t%d\t%s\n",
                    t->time_str,
                    t->cpu_percent,
+                   t->avg_cpu_percent,
                    t->ram_percent,
                    t->pid,
                    t->comm);
