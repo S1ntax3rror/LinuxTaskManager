@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-
+#include <time.h>
 #include "proc_stat.h"
 
 typedef struct trimmed_info {
@@ -17,6 +17,10 @@ typedef struct trimmed_info {
     double ram_percent;
 
     uint64_t timestamp_ms;
+    char time_str[16];         
+
+    double avg_cpu_percent;      
+    double peak_ram_percent; 
 
 } trimmed_info;
 

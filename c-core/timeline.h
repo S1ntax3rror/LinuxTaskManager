@@ -8,3 +8,5 @@ typedef struct proc_timeline {
     int pid;           // for easy reference
     int valid;         // optional
 } proc_timeline;
+
+double calculate_avg_cpu_percent(proc_timeline* timeline);
