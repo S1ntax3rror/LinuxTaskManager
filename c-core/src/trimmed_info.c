@@ -1,5 +1,5 @@
-#include "trimmed_info.h"
-#include "proc_stat.h"
+#include "../include/trimmed_info.h"
+#include "../include/proc_stat.h"
 #include <string.h>
 #include <time.h>      
 #include <stdio.h>     

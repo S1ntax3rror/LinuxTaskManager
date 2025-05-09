@@ -24,4 +24,3 @@ The plan is not completely fixed but gives us a guideline on how we could approa
 
 #### Query data
 - distinguish root and user process
-- read proc / stat file
