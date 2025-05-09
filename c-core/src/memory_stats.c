@@ -1,4 +1,4 @@
-#include "memory_stats.h"
+#include "../include/memory_stats.h"
 #include <stdio.h>
 #include <string.h>
 

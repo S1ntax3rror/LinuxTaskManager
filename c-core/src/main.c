@@ -6,15 +6,15 @@
 #include <sys/time.h>
 #include <stdint.h>
 
-#include "proc_stat.h"
-#include "utils.h"
-#include "general_stat_query.h"
-#include "cpu_usage.h"
-#include "memory_stats.h"
-#include "proc_entry.h"
-#include "timeline.h"
-#include "trimmed_info.h"
-#include "process_sort.h"
+#include "../include/proc_stat.h"
+#include "../include/utils.h"
+#include "../include/general_stat_query.h"
+#include "../include/cpu_usage.h"
+#include "../include/memory_stats.h"
+#include "../include/proc_entry.h"
+#include "../include/timeline.h"
+#include "../include/trimmed_info.h"
+#include "../include/process_sort.h"
 
 #define MAX_PROCS 2048
 #define DOWN_TIME 2000000  //microseconds // 200000 for 200ms (to test i did 2000000 for 2s)

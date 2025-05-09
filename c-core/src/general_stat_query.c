@@ -1,4 +1,4 @@
-#include "general_stat_query.h"
+#include "../include/general_stat_query.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
