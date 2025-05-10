@@ -1,0 +1,5 @@
+ltm:
+  socket-path: /tmp/lmt.sock
+
+server:
+  port: 8080
