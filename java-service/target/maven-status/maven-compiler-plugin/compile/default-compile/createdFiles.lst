@@ -1,8 +1,7 @@
-com/OSProject/LinuxTaskManager/controller/ViewController.class
-com/OSProject/LinuxTaskManager/service/ProcessService.class
-com/OSProject/LinuxTaskManager/service/Ltm_Client$1.class
-com/OSProject/LinuxTaskManager/service/Ltm_Client.class
-com/OSProject/LinuxTaskManager/controller/ProcessController.class
-com/OSProject/LinuxTaskManager/model/Ltm_Dto.class
-com/OSProject/LinuxTaskManager/LinuxTaskManagerApplication.class
-com/OSProject/LinuxTaskManager/service/MockProcessService.class
+com/service/MockProcessService.class
+com/controller/ViewController.class
+com/model/ProcessDTO.class
+com/model/SignalRequest.class
+com/LinuxTaskManagerApplication.class
+com/service/ProcessService.class
+com/controller/ProcessController.class

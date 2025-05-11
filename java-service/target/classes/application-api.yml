@@ -1,0 +1,6 @@
+spring:
+  profiles: api
+
+external:
+  api:
+    url: http://localhost:9000/api    # real C-daemon microservice

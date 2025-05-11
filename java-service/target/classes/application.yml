@@ -1,5 +1,7 @@
-ltm:
-  socket-path: /tmp/lmt.sock
-
+spring:
+  profiles:
+    active: mock    #
+    
 server:
   port: 8080
+

@@ -1,7 +1,7 @@
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/OSProject/LinuxTaskManager/LinuxTaskManagerApplication.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/OSProject/LinuxTaskManager/controller/ProcessController.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/OSProject/LinuxTaskManager/controller/ViewController.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/OSProject/LinuxTaskManager/model/Ltm_Dto.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/OSProject/LinuxTaskManager/service/Ltm_Client.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/OSProject/LinuxTaskManager/service/MockProcessService.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/OSProject/LinuxTaskManager/service/ProcessService.java
+/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/LinuxTaskManagerApplication.java
+/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/controller/ProcessController.java
+/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/controller/ViewController.java
+/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/ProcessDTO.java
+/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/SignalRequest.java
+/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/service/MockProcessService.java
+/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/service/ProcessService.java
