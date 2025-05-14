@@ -10,6 +10,7 @@
 typedef struct cpu_stats
 {
     char name[512];
+    uint64_t user;
     uint64_t nice;
     uint64_t system;
     uint64_t idle;
@@ -32,7 +33,21 @@ typedef struct general_stat { // create struct for storing process data
     uint64_t procs_running;
     uint64_t procs_blocked;
     int num_cpus;
-    // add more if needed
+    float total_cpu_time;
+    uint64_t cpu_nonproductive_time;
+    float total_cpu_utilization_percent;
+    float total_cpu_user;
+    float total_cpu_system;
+    float total_cpu_wait;
+    float total_cpu_idle;
+    float total_cpu_steal;
+    float total_gpu;
+    float total_disk_write_MB;
+    float total_disk_read_MB;
+    float avg_disk_read_MB;
+    float avg_disk_write_MB; // last 100 frames
+    float network_upload;
+    float network_download;
 } general_stat;
     
 
