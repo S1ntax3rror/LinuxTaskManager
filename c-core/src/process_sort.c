@@ -1,4 +1,4 @@
-#include "../include/process_sort.h"
+#include "process_sort.h"
 #include <stdlib.h>  
 #include <string.h>
 

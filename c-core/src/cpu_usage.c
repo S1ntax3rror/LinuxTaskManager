@@ -1,5 +1,5 @@
-#include "../include/timeline.h"
-#include "../include/cpu_usage.h"
+#include "timeline.h"
+#include "cpu_usage.h"
 #include <unistd.h>
 
 void calculate_normalized_cpu_usage(proc_stat* before, proc_stat* after, double interval_seconds) {

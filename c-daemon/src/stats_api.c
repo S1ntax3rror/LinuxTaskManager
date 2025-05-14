@@ -1,7 +1,7 @@
 // stats_api.c
-#include "../c-daemon/include/stats_api.h"
-#include "../c-daemon/include/core_interface.h"
-#include "../c-daemon/include/server.h"
+#include "stats_api.h"
+#include "core_interface.h"
+#include "server.h"
 
 #include <cjson/cJSON.h>
 

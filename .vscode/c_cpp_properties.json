@@ -1,0 +1,34 @@
+{
+  "configurations": [
+    {
+      "name": "LinuxTaskManager",
+      "includePath": [
+        "${workspaceFolder}/c-daemon/include",
+        "${workspaceFolder}/c-daemon/src",
+        "${workspaceFolder}/c-core/include",
+        "${workspaceFolder}/c-core/src",
+        "/usr/include",
+        "/usr/local/include"
+      ],
+      "defines": [],
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "c11",
+      "intelliSenseMode": "gcc-x64",
+      "browse": {
+        "path": [
+          "${workspaceFolder}/c-daemon/include",
+          "${workspaceFolder}/c-daemon/src",
+          "${workspaceFolder}/c-core/include",
+          "${workspaceFolder}/c-core/src",
+          "/usr/include",
+          "/usr/local/include"
+        ],
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "files.associations": {
+        "utils.h": "c"
+      }
+    }
+  ],
+  "version": 4
+}

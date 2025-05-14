@@ -1,7 +1,7 @@
 // routes.c
-#include "../c-daemon/include/routes.h"
-#include "../c-daemon/include/process_api.h"
-#include "../c-daemon/include/stats_api.h"
+#include "routes.h"
+#include "process_api.h"
+#include "stats_api.h"
 
 #include <string.h>
 #include <microhttpd.h>

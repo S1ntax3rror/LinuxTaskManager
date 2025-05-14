@@ -1,6 +1,6 @@
 // server.c
-#include "../c-daemon/include/server.h"
-#include "../c-daemon/include/routes.h"
+#include "server.h"
+#include "routes.h"
 
 #include <string.h>
 

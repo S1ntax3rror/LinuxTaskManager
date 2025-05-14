@@ -1,8 +1,8 @@
 #ifndef CORE_INTERFACE_H
 #define CORE_INTERFACE_H
 
-#include "../c-core/include/trimmed_info.h"
-#include "../c-core/include/general_stat_query.h"
+#include "trimmed_info.h"
+#include "general_stat_query.h"
 
 /* Returns a heap‐allocated array of trimmed_info for current processes.
  * Caller must free() the returned pointer.

@@ -1,5 +1,5 @@
 // main.c
-#include "../c-daemon/include/server.h"
+#include "server.h"
 #include <stdio.h>
 
 #define PORT 9000
