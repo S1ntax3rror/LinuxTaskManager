@@ -1,0 +1,19 @@
+{
+    "configurations": [
+      {
+        "name": "LinuxTaskManager",
+        "includePath": [
+          "${workspaceFolder}/c-daemon/include",
+          "${workspaceFolder}/c-core/include",
+          "/usr/include",            // system headers
+          "/usr/local/include"
+        ],
+        "defines": [],
+        "compilerPath": "/usr/bin/gcc",
+        "cStandard": "c11",
+        "intelliSenseMode": "gcc-x64"
+      }
+    ],
+    "version": 4
+  }
+  
