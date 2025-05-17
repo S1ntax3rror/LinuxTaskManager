@@ -4,7 +4,6 @@ import lombok.Data;
 
 /**
  * Maps exactly to the C struct `trimmed_info`.
- * Each instance represents one process snapshot.
  */
 @Data
 public class ProcessDTO {
@@ -23,6 +22,6 @@ public class ProcessDTO {
     /** RAM usage (%) at this snapshot */
     private double ramPercent;
 
-    /** Timestamp (ms since Unix epoch) when snapshot was taken */
-    private long   timestampMs;
+    /** Nice value */
+    private int    nice;     // <— new
 }

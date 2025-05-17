@@ -13,14 +13,18 @@ CORE_SRCDIR := ../c-core/src
 
 # pull in every .c from src/ plus the core helpers
 SRC := \
-    $(wildcard $(SRCDIR)/*.c)                           \
-    $(CORE_SRCDIR)/general_stat_query.c                  \
-    $(CORE_SRCDIR)/proc_stat.c                           \
-    $(CORE_SRCDIR)/trimmed_info.c                        \
-    $(CORE_SRCDIR)/memory_stats.c                        \
-    $(CORE_SRCDIR)/utils.c                               \
-    $(CORE_SRCDIR)/cpu_usage.c                           \
-    $(CORE_SRCDIR)/process_sort.c
+    SRC := \
+    $(wildcard $(SRCDIR)/*.c)                  \
+    $(CORE_SRCDIR)/general_stat_query.c        \
+    $(CORE_SRCDIR)/proc_stat.c                 \
+    $(CORE_SRCDIR)/trimmed_info.c              \
+    $(CORE_SRCDIR)/memory_stats.c              \
+    $(CORE_SRCDIR)/utils.c                     \
+    $(CORE_SRCDIR)/cpu_usage.c                 \
+    $(CORE_SRCDIR)/process_sort.c              \
+    $(CORE_SRCDIR)/core_interface.c            \
+    $(SRCDIR)/limit_routes.c
+
 
 OBJ := $(SRC:.c=.o)
 
