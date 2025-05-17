@@ -1,7 +1,6 @@
-// server.c
 #include "server.h"
 #include "routes.h"
-
+#include <microhttpd.h>
 #include <string.h>
 
 static int on_request(void *cls,
@@ -13,8 +12,35 @@ static int on_request(void *cls,
                       size_t *upload_data_size,
                       void **con_cls)
 {
-    (void)cls; (void)version; (void)upload_data; (void)upload_data_size; (void)con_cls;
-    return route_request(conn, url, method);
+    ConnContext *ctx = *con_cls;
+    if (!ctx) {
+        // first call: allocate context
+        ctx = calloc(1, sizeof(*ctx));
+        *con_cls = ctx;
+        return MHD_YES;
+    }
+
+    if (*upload_data_size > 0) {
+        // accumulate this chunk
+        ctx->upload_data = realloc(ctx->upload_data,
+                                   ctx->upload_len + *upload_data_size + 1);
+        memcpy(ctx->upload_data + ctx->upload_len,
+               upload_data, *upload_data_size);
+        ctx->upload_len += *upload_data_size;
+        ctx->upload_data[ctx->upload_len] = '\0';
+        *upload_data_size = 0;
+        return MHD_YES;
+    }
+
+    // all data received: dispatch
+    const char *body = ctx->upload_data ? ctx->upload_data : "";
+    int result = route_request(conn, url, method, body);
+
+    // clean up
+    free(ctx->upload_data);
+    free(ctx);
+    *con_cls = NULL;
+    return result;
 }
 
 int start_http_server(unsigned port) {
@@ -24,16 +50,4 @@ int start_http_server(unsigned port) {
         NULL, NULL,
         &on_request, NULL,
         MHD_OPTION_END) != NULL;
-}
-
-int send_json_response(struct MHD_Connection *conn, cJSON *obj) {
-    char *body = cJSON_PrintUnformatted(obj);
-    cJSON_Delete(obj);
-
-    struct MHD_Response *resp = MHD_create_response_from_buffer(
-        strlen(body), (void*)body, MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header(resp, "Content-Type", "application/json");
-    int ret = MHD_queue_response(conn, MHD_HTTP_OK, resp);
-    MHD_destroy_response(resp);
-    return ret;
 }

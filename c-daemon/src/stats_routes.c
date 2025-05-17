@@ -1,11 +1,13 @@
-// stats_api.c
-#include "stats_api.h"
-#include "core_interface.h"
-#include "server.h"
+// c-daemon/src/stats_routes.c
 
+#include "stats_routes.h"
+#include "core_interface.h"  // for get_cpu_stats()
+#include "server.h"          // for send_json_response()
+#include <string.h>
 #include <cjson/cJSON.h>
 
-int handle_cpu_stats(struct MHD_Connection *conn) {
+/* Internal: actually serialize and send /api/stats/cpu */
+static int handle_cpu_stats(struct MHD_Connection *conn) {
     general_stat gs = get_cpu_stats();
 
     cJSON *root = cJSON_CreateObject();
@@ -23,6 +25,7 @@ int handle_cpu_stats(struct MHD_Connection *conn) {
     cJSON_AddNumberToObject(cpu,  "guest_nice", gs.cpu.guest_nice);
     cJSON_AddItemToObject(root, "cpu", cpu);
 
+    // per-core idle stats
     cJSON *cores = cJSON_CreateArray();
     for (int i = 0; i < gs.num_cpus; ++i) {
         cpu_stats *c = &gs.cores[i];
@@ -33,6 +36,7 @@ int handle_cpu_stats(struct MHD_Connection *conn) {
     }
     cJSON_AddItemToObject(root, "cores", cores);
 
+    // other fields
     cJSON_AddNumberToObject(root, "intr",         gs.intr_0);
     cJSON_AddNumberToObject(root, "ctxt",         gs.ctxt);
     cJSON_AddNumberToObject(root, "btime",        gs.btime);
@@ -42,4 +46,15 @@ int handle_cpu_stats(struct MHD_Connection *conn) {
     cJSON_AddNumberToObject(root, "num_cpus",      gs.num_cpus);
 
     return send_json_response(conn, root);
+}
+
+/* Public: dispatch stats routes */
+int dispatch_stats_routes(struct MHD_Connection *conn,
+                          const char       *url,
+                          const char       *method)
+{
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/cpu")) {
+        return handle_cpu_stats(conn), 1;
+    }
+    return 0;
 }
