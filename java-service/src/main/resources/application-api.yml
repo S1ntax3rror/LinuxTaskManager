@@ -1,6 +1,8 @@
 spring:
-  profiles: api
+  config:
+    activate:
+      on-profile: api
 
 external:
   api:
-    url: http://localhost:9000/api    # real C-daemon microservice
+    url: http://localhost:9000/api

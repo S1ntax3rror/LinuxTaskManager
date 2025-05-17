@@ -1,8 +1,8 @@
-// java-service/src/main/java/com/OSProject/LinuxTaskManager/controller/ProcessController.java
+// java-service/src/main/java/com/controller/ProcessController.java
 package com.controller;
 
 import com.model.*;
-import com.service.*;
+import com.service.ApiProcessService;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -11,8 +11,11 @@ import java.util.List;
 @RequestMapping("/api/processes")
 public class ProcessController {
 
-  private final ProcessService svc;
-  public ProcessController(ProcessService svc) { this.svc = svc; }
+  private final ApiProcessService svc;
+
+  public ProcessController(ApiProcessService svc) {
+    this.svc = svc;
+  }
 
   @GetMapping
   public List<ProcessDTO> all() {

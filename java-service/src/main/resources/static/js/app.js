@@ -1,10 +1,38 @@
+// default sort field
+let sortField = 'cpu';
+
+// change sort and update button states
+function setSort(field) {
+  sortField = field;
+
+  // toggle active classes
+  document.getElementById('btn-sort-cpu')
+          .classList.toggle('active', field === 'cpu');
+  document.getElementById('btn-sort-ram')
+          .classList.toggle('active', field === 'ram');
+
+  // immediately refresh
+  fetchProcs();
+}
+
 async function fetchProcs() {
   try {
     const res = await fetch('/api/processes');
     if (!res.ok) {
       throw new Error(`Server error: ${res.status}`);
     }
-    const procs = await res.json();
+
+    let procs = await res.json();
+
+    // sort by chosen field descending
+    procs.sort((a, b) => {
+      if (sortField === 'cpu') {
+        return b.cpuPercent - a.cpuPercent;
+      } else {
+        return b.ramPercent - a.ramPercent;
+      }
+    });
+
     const tbody = document.getElementById('proc-table');
     tbody.innerHTML = procs.map(p => `
       <tr>
@@ -26,6 +54,7 @@ async function fetchProcs() {
   }
 }
 
+// signal helper stays the same
 async function signal(pid, cmd) {
   try {
     const res = await fetch(`/api/processes/${pid}/signal`, {

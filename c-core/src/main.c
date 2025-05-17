@@ -12,7 +12,6 @@
 #include "cpu_usage.h"
 #include "memory_stats.h"
 #include "proc_entry.h"
-#include "timeline.h"
 #include "trimmed_info.h"
 #include "process_sort.h"
 
