@@ -3,23 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <title>Linux Task Manager</title>
-  <!-- favicon -->
   <link rel="icon" th:href="@{/ltm_icon.ico}" type="image/x-icon"/>
-  <!-- bootstrap -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
     rel="stylesheet"/>
-  <!-- custom styles -->
   <link th:href="@{/css/style.css}" rel="stylesheet"/>
 </head>
-<body>
+<body class="bg-light">
   <div class="container my-5">
     <div class="text-center mb-4">
       <img th:src="@{/ltm_icon.ico}" alt="LTM" class="me-2" style="width:48px;height:48px;">
       <h1 class="d-inline align-middle">Linux Task Manager</h1>
     </div>
 
-    <!-- Renice form -->
+    <!-- Renice -->
     <div class="row g-2 mb-3">
       <div class="col-sm">
         <input id="in-pid-renice" type="number" class="form-control" placeholder="PID">
@@ -32,7 +29,7 @@
       </div>
     </div>
 
-    <!-- CPU limit form -->
+    <!-- CPU Limit -->
     <div class="row g-2 mb-3">
       <div class="col-sm">
         <input id="in-pid-cpu" type="number" class="form-control" placeholder="PID">
@@ -45,7 +42,7 @@
       </div>
     </div>
 
-    <!-- RAM limit form -->
+    <!-- RAM Limit -->
     <div class="row g-2 mb-4">
       <div class="col-sm">
         <input id="in-pid-ram" type="number" class="form-control" placeholder="PID">
@@ -58,9 +55,9 @@
       </div>
     </div>
 
-    <!-- Sort toggle -->
+    <!-- Sort -->
     <div class="d-flex justify-content-end mb-2">
-      <div class="btn-group" role="group">
+      <div class="btn-group">
         <button id="btn-sort-cpu"
                 class="btn btn-outline-secondary active"
                 onclick="setSort('cpu')">
@@ -74,24 +71,17 @@
       </div>
     </div>
 
-    <!-- Processes table -->
+    <!-- Table -->
     <div class="card shadow-sm">
       <div class="card-body p-0">
         <table class="table table-striped table-hover mb-0">
           <thead class="table-dark">
             <tr>
-              <th>PID</th>
-              <th>Name</th>
-              <th>State</th>
-              <th>Nice</th>
-              <th>% CPU</th>
-              <th>% RAM</th>
-              <th>Actions</th>
+              <th>PID</th><th>Name</th><th>State</th><th>Nice</th>
+              <th>% CPU</th><th>% RAM</th><th>Action</th>
             </tr>
           </thead>
-          <tbody id="proc-table">
-            <!-- JS will populate -->
-          </tbody>
+          <tbody id="proc-table"></tbody>
         </table>
       </div>
     </div>

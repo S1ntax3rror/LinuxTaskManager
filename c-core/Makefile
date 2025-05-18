@@ -1,37 +1,24 @@
-.RECIPEPREFIX = >
-.PHONY: all clean
+.PHONY: all debug clean
 
-CC        := gcc
-# expose DT_DIR, etc.
-CFLAGS    := -D_DEFAULT_SOURCE -Iinclude -I../c-core/include -Wall -O2
-LIBS      := -lmicrohttpd -lcjson
+CFLAGS   := -D_DEFAULT_SOURCE -Iinclude -Wall -O2
 
-SRCDIR      := src
-CORE_SRCDIR := ../c-core/src
+all:
+	gcc $(CFLAGS) -o process_monitor_query \
+	    src/main.c                          \
+	    src/proc_stat.c                     \
+	    src/utils.c                         \
+	    src/general_stat_query.c            \
+	    src/cpu_usage.c                     \
+	    src/memory_stats.c                  \
+	    src/trimmed_info.c                  \
+	    src/process_sort.c
 
-# pull in every .c from src/ plus the core helpers
-SRC := \
-    $(wildcard $(SRCDIR)/*.c)                           \
-    $(CORE_SRCDIR)/general_stat_query.c                 \
-    $(CORE_SRCDIR)/proc_stat.c                          \
-    $(CORE_SRCDIR)/trimmed_info.c                       \
-    $(CORE_SRCDIR)/memory_stats.c                       \
-    $(CORE_SRCDIR)/utils.c                              \
-    $(CORE_SRCDIR)/cpu_usage.c                          \
-    $(CORE_SRCDIR)/process_sort.c                       \
-    $(CORE_SRCDIR)/core_interface.c
-
-OBJ := $(SRC:.c=.o)
-
-all: http_server
-
-# link
-http_server: $(OBJ)
->   $(CC) $(CFLAGS) -o $@ $^ $(LIBS)
-
-# compile
-%.o: %.c
->   $(CC) $(CFLAGS) -c $< -o $@
+debug:
+	gcc -g $(CFLAGS) -o process_monitor_query_debug \
+	    src/main.c src/proc_stat.c src/utils.c     \
+	    src/general_stat_query.c src/cpu_usage.c   \
+	    src/memory_stats.c src/trimmed_info.c      \
+	    src/process_sort.c
 
 clean:
->   rm -f $(OBJ) http_server
+	rm -f process_monitor_query process_monitor_query_debug

@@ -1,5 +1,3 @@
-// custom.css will handle fonts, colors, spacing
-
 let sortField = 'cpu';
 
 function setSort(f) {
@@ -14,6 +12,7 @@ function setSort(f) {
 async function fetchProcs() {
   try {
     const res = await fetch('/api/processes');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const procs = await res.json();
 
     procs.sort((a, b) =>
@@ -32,7 +31,7 @@ async function fetchProcs() {
           <td>${p.cpuPercent.toFixed(1)}</td>
           <td>${p.ramPercent.toFixed(1)}</td>
           <td>
-            <button class="btn btn-sm btn-danger"
+            <button class="btn btn-sm btn-danger me-1"
                     onclick="doSignal(${p.pid}, 'KILL')">
               Kill
             </button>
@@ -40,50 +39,70 @@ async function fetchProcs() {
         </tr>
       `).join('');
   } catch (e) {
-    console.error('Failed to fetch processes', e);
+    console.error('Failed to fetch processes:', e);
   }
 }
 
 async function doSignal(pid, cmd) {
-  await fetch(`/api/processes/${pid}/signal`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ cmd })
-  });
-  fetchProcs();
+  try {
+    const res = await fetch(`/api/processes/${pid}/signal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cmd })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    fetchProcs();
+  } catch (e) {
+    alert(`Failed to send signal to PID ${pid}: ${e}`);
+  }
 }
 
 async function doRenice() {
   const pid  = +document.getElementById('in-pid-renice').value;
   const nice = +document.getElementById('in-nice').value;
-  await fetch(`/api/processes/${pid}/renice`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nice })
-  });
-  fetchProcs();
+  try {
+    const res = await fetch(`/api/processes/${pid}/renice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nice })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    fetchProcs();
+  } catch (e) {
+    alert(`Failed to renice PID ${pid}: ${e}`);
+  }
 }
 
 async function doCpuLimit() {
-  const pid = +document.getElementById('in-pid-cpu').value;
+  const pid  = +document.getElementById('in-pid-cpu').value;
   const secs = +document.getElementById('in-cpu-limit').value;
-  await fetch(`/api/processes/${pid}/limit/cpu`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ limit: secs })
-  });
-  fetchProcs();
+  try {
+    const res = await fetch(`/api/processes/${pid}/limit/cpu`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit: secs })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    fetchProcs();
+  } catch (e) {
+    alert(`Failed to set CPU limit for PID ${pid}: ${e}`);
+  }
 }
 
 async function doRamLimit() {
   const pid = +document.getElementById('in-pid-ram').value;
   const mb  = +document.getElementById('in-ram-limit').value;
-  await fetch(`/api/processes/${pid}/limit/ram`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ limit: mb })
-  });
-  fetchProcs();
+  try {
+    const res = await fetch(`/api/processes/${pid}/limit/ram`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit: mb })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    fetchProcs();
+  } catch (e) {
+    alert(`Failed to set RAM limit for PID ${pid}: ${e}`);
+  }
 }
 
 window.addEventListener('load', () => {
