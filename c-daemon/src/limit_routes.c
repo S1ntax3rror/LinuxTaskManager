@@ -1,10 +1,16 @@
 #include "limit_routes.h"
 #include "core_interface.h"
-#include "server.h"          // send_json_response()
+#include "server.h"
 #include <cjson/cJSON.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include <stdlib.h>
 
-static long json_get_long(const char *body, const char *field) {
+/**
+ * Parse a JSON integer field out of the POST body.
+ */
+static long limit_routes_json_get_long(const char *body, const char *field) {
     cJSON *req = cJSON_Parse(body);
     if (!req) return -1;
     cJSON *item = cJSON_GetObjectItem(req, field);
@@ -14,35 +20,56 @@ static long json_get_long(const char *body, const char *field) {
 }
 
 int handle_renice(struct MHD_Connection *conn, int pid, const char *body) {
-    long nice_val = json_get_long(body, "nice");
+    long nice_val = limit_routes_json_get_long(body, "nice");
+    printf("[limit_routes] renice pid=%d to nice=%ld\n", pid, nice_val);
     if (nice_val < -20 || nice_val > 19) {
-        // invalid nice
+        fprintf(stderr, "[limit_routes] bad nice %ld\n", nice_val);
         return MHD_HTTP_BAD_REQUEST;
     }
     if (renice_process(pid, (int)nice_val) == 0) {
+        printf("[limit_routes] renice succeeded\n");
         return MHD_HTTP_NO_CONTENT;
     } else {
+        fprintf(stderr,
+                "[limit_routes] renice_process failed: %s\n",
+                strerror(errno));
         return MHD_HTTP_INTERNAL_SERVER_ERROR;
     }
 }
 
 int handle_cpu_limit(struct MHD_Connection *conn, int pid, const char *body) {
-    long secs = json_get_long(body, "limit");
-    if (secs < 0) return MHD_HTTP_BAD_REQUEST;
+    long secs = limit_routes_json_get_long(body, "limit");
+    printf("[limit_routes] cpu‐limit pid=%d to %lds\n", pid, secs);
+    if (secs < 0) {
+        fprintf(stderr, "[limit_routes] bad cpu limit %ld\n", secs);
+        return MHD_HTTP_BAD_REQUEST;
+    }
     if (set_cpu_limit(pid, (rlim_t)secs) == 0) {
+        printf("[limit_routes] set_cpu_limit succeeded\n");
         return MHD_HTTP_NO_CONTENT;
     } else {
+        fprintf(stderr,
+                "[limit_routes] set_cpu_limit failed: %s\n",
+                strerror(errno));
         return MHD_HTTP_INTERNAL_SERVER_ERROR;
     }
 }
 
 int handle_ram_limit(struct MHD_Connection *conn, int pid, const char *body) {
-    long mb = json_get_long(body, "limit");
-    if (mb < 0) return MHD_HTTP_BAD_REQUEST;
+    long mb = limit_routes_json_get_long(body, "limit");
+    printf("[limit_routes] ram‐limit pid=%d to %ldMB\n", pid, mb);
+    if (mb < 0) {
+        fprintf(stderr, "[limit_routes] bad ram limit %ld\n", mb);
+        return MHD_HTTP_BAD_REQUEST;
+    }
     rlim_t bytes = (rlim_t)mb * 1024 * 1024;
     if (set_ram_limit(pid, bytes) == 0) {
+        printf("[limit_routes] set_ram_limit succeeded\n");
         return MHD_HTTP_NO_CONTENT;
     } else {
+        fprintf(stderr,
+                "[limit_routes] set_ram_limit failed: %s\n",
+                strerror(errno));
         return MHD_HTTP_INTERNAL_SERVER_ERROR;
     }
 }

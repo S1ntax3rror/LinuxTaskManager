@@ -1,23 +1,19 @@
-// c-daemon/src/routes.c
-
 #include "routes.h"
-#include "process_routes.h"  // handle_process_list(), handle_signal()
-#include "limit_routes.h"    // handle_renice(), handle_cpu_limit(), handle_ram_limit()
-#include "stats_routes.h"    // dispatch_stats_routes()
+#include "process_routes.h"   // handle_process_list, handle_signal
+#include "limit_routes.h"     // handle_renice, handle_cpu_limit, handle_ram_limit
+#include "stats_routes.h"     // dispatch_stats_routes
 #include "server.h"
 #include <microhttpd.h>
 #include <string.h>
-#include <stdio.h>
 
 int route_request(struct MHD_Connection *conn,
-                  const char       *url,
-                  const char       *method,
-                  const char       *body)
+                  const char *url,
+                  const char *method,
+                  const char *body)
 {
     // GET /api/processes
-    if (!strcmp(method, "GET") && !strcmp(url, "/api/processes")) {
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/processes"))
         return handle_process_list(conn);
-    }
 
     // POST /api/processes/{pid}/signal
     {
@@ -60,12 +56,10 @@ int route_request(struct MHD_Connection *conn,
     }
 
     // GET /api/stats/cpu
-    if (dispatch_stats_routes(conn, url, method)) {
-        // dispatch_stats_routes already sent the 200 response
+    if (dispatch_stats_routes(conn, url, method))
         return MHD_HTTP_OK;
-    }
 
-    // Not found → 404
+    // Not found
     const char *notf = "Not Found";
     struct MHD_Response *resp =
       MHD_create_response_from_buffer(strlen(notf),

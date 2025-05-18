@@ -3,12 +3,14 @@
 
 #include <microhttpd.h>
 
+/* Return 200+JSON list of processes */
 int  handle_process_list(struct MHD_Connection *conn);
+
+/* POST /api/processes/{pid}/signal
+ * body: {"cmd":"KILL"} or {"cmd":"TERM"} or {"cmd":"9"}
+ */
 int  handle_signal      (struct MHD_Connection *conn,
                          int pid,
                          const char *body);
-/* Returns nonzero if this module handled the URL+method */
-int dispatch_process_routes(struct MHD_Connection *conn,
-                            const char *url, const char *method);
 
 #endif // PROCESS_ROUTES_H

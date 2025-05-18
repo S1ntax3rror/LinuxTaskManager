@@ -1,7 +1,0 @@
-com/model/SignalRequest.class
-com/controller/ViewController.class
-com/LinuxTaskManagerApplication.class
-com/config/RestConfig.class
-com/controller/ProcessController.class
-com/service/ApiProcessService.class
-com/model/ProcessDTO.class
