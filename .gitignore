@@ -1,0 +1,5 @@
+*.o
+*.class
+c-core/process_monitor_query
+c-daemon/http_server
+*compile/*.lst
