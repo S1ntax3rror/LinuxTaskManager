@@ -1,5 +1,5 @@
-com/controller/ViewController.class
 com/model/SignalRequest.class
+com/controller/ViewController.class
 com/LinuxTaskManagerApplication.class
 com/config/RestConfig.class
 com/controller/ProcessController.class

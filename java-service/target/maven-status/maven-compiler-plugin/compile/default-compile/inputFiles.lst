@@ -1,7 +1,7 @@
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/LinuxTaskManagerApplication.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/config/RestConfig.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/controller/ProcessController.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/controller/ViewController.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/ProcessDTO.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/SignalRequest.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/service/ApiProcessService.java
+/home/jiri/Documents/Projects/OS/LinuxTaskManager/java-service/src/main/java/com/LinuxTaskManagerApplication.java
+/home/jiri/Documents/Projects/OS/LinuxTaskManager/java-service/src/main/java/com/config/RestConfig.java
+/home/jiri/Documents/Projects/OS/LinuxTaskManager/java-service/src/main/java/com/controller/ProcessController.java
+/home/jiri/Documents/Projects/OS/LinuxTaskManager/java-service/src/main/java/com/controller/ViewController.java
+/home/jiri/Documents/Projects/OS/LinuxTaskManager/java-service/src/main/java/com/model/ProcessDTO.java
+/home/jiri/Documents/Projects/OS/LinuxTaskManager/java-service/src/main/java/com/model/SignalRequest.java
+/home/jiri/Documents/Projects/OS/LinuxTaskManager/java-service/src/main/java/com/service/ApiProcessService.java
