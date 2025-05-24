@@ -14,6 +14,7 @@
 #include "proc_entry.h"
 #include "trimmed_info.h"
 #include "process_sort.h"
+#include "header.h"
 
 #define MAX_PROCS 2048
 #define DOWN_TIME 2000000  //microseconds // 200000 for 200ms (to test i did 2000000 for 2s)
@@ -28,6 +29,9 @@ int main() {
     SortMode current_sort = SORT_BY_PID;            
     int visible_count = 0; 
 
+    header header_stats;
+    init_header(&header_stats);
+
     proc_timeline* history = calloc(MAX_PROCS, sizeof(proc_timeline));
     if (!history) {
         perror("calloc failed");
@@ -38,7 +42,7 @@ int main() {
         history[i].latest_index = 0;
     }
 
-    int* num_str;
+    //int* num_str;
     
     DIR *dp = opendir("/proc"); // open proc directory
     if (dp == NULL) {           // make sure it is opened correctly
@@ -60,14 +64,30 @@ int main() {
     general_stat general_stat_container;
     split_general_stat_string(stat_data, &general_stat_container);
     print_general_stat(&general_stat_container);
-    exit(0);
+
+    printf("\nDisk Read: %.2f MB\n", general_stat_container.disk.read_MB);
+    printf("Disk Write: %.2f MB\n", general_stat_container.disk.write_MB);
+
+    printf("Download: %.2f MB\n", general_stat_container.net.total_download_MB);
+    printf("Upload:   %.2f MB\n", general_stat_container.net.total_upload_MB);
+
+    if (general_stat_container.gpu.nvidia_gpu) {
+        printf("GPU Memory Used: %.2f MB\n", general_stat_container.gpu.gpu_MB);
+        printf("GPU Utilization: %.2f%%\n", general_stat_container.gpu.gpu_util_percent);
+    } else {
+        printf("No NVIDIA GPU detected.\n");
+    }
+    
+
+    
+    //exit(0);// break point for genaral_stat testing
     int num_folders = count_folders("/proc"); // INITIALIZE LIST WITH ENOUGH SPACE FOR ALL PROCESS STATS
     printf("%i folders in /proc. Allocating space for %i potential stat lists. \n", num_folders, num_folders);
-    proc_stat process_statistics_array[num_folders];    
-    int current_list_entry_index = 0;
+    //proc_stat process_statistics_array[num_folders];    
+    //int current_list_entry_index = 0;
     
     
-    proc_entry processes[MAX_PROCS];
+    proc_entry* processes = calloc(MAX_PROCS, sizeof(proc_entry));
     int proc_count = 0;
     
     // init of before_info
@@ -102,15 +122,19 @@ int main() {
         }
     }
     closedir(dp);
-    int loopcount = 0;//for testing
+    //exit(0); //init_testing
+    //int loopcount = 0;//for testing
     while(1){
 
     
             usleep(DOWN_TIME);  //Time Interval 
-            //sorting testing
-            read_memory_stats(&meminfo);
-
             
+            read_memory_stats(&meminfo);
+            char* stat_data = read_general_stat("/proc/stat");
+            general_stat general_stat_container;
+            split_general_stat_string(stat_data, &general_stat_container);
+            push_general_stat(&header_stats, &general_stat_container, DOWN_TIME / 1000000.0);
+            free(stat_data);
             
         
             //reopen proc
@@ -199,10 +223,26 @@ int main() {
             case SORT_BY_AVG_CPU: sort_by_avg_cpu(sorted_list, visible_count); break;
         }
         
+
+        //int last_index = (header_stats.latest_index - 1 + MAX_HEADER_ENTRIES) % MAX_HEADER_ENTRIES;
+        //general_stat* latest = &header_stats.entries[last_index];
+
+        // printf("\n--- Latest General Stat ---\n");
+        // printf("CPU%%: %.2f\n", latest->total_cpu_utilization_percent);
+        // printf("RAM Available: %.2f MB\n", latest->memory.mem_available_kb / 1024.0);
+        // printf("Disk Read: %.2f MB\n", latest->avg_disk_read_MB);
+        // printf("Download: %.2f MB\n", latest->net.total_download_MB);
+
+        
+        // printf("Download Speed: %.2f MB/s\n", latest->network_avg_download_speed);
+        // printf("Upload Speed: %.2f MB/s\n", latest->network_avg_upload_speed);
+        
+
+
         printf("\033[H\033[J");  // Clear screen
         printf("Live Process Monitor (refresh: %.1f sec)\n\n", (double)DOWN_TIME / 1000000.0);
         printf("Time\t\tCPU%% \tA_CPU%%\tRAM %%\tPID\tName\n");
-        
+        //printf("%s\n", sorted_list[1].time_str);
         int to_display = visible_count > 10 ? 10 : visible_count;
         for (int i = 0; i < to_display; i++) {
             trimmed_info* t = &sorted_list[i];
