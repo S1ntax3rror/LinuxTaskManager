@@ -44,9 +44,19 @@ int handle_process_list(struct MHD_Connection *conn) {
 
 int handle_signal(struct MHD_Connection *conn, int pid, const char *body) {
     char *cmd = json_get_string(body, "cmd");
-    if (!cmd) {
+    printf("%s", body);
+    if (!cmd) { //Bad request --> close connection directly
         fprintf(stderr, "[process_routes] missing cmd field\n");
-        return MHD_HTTP_BAD_REQUEST;
+        const char *response_str = "Bad Request";
+        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str),
+                                                                (void *)response_str,
+                                                                MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(resp, "Connection", "close");
+
+        int ret = MHD_queue_response(conn, MHD_HTTP_BAD_REQUEST, resp);
+        MHD_destroy_response(resp);
+        return ret;
+        //return MHD_HTTP_BAD_REQUEST;
     }
 
     int signo = -1;

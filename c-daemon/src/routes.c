@@ -5,12 +5,19 @@
 #include "../include/server.h"
 #include <microhttpd.h>
 #include <string.h>
+#include <stdio.h>
 
 int route_request(struct MHD_Connection *conn,
                   const char *url,
                   const char *method,
                   const char *body)
 {
+    printf("%s\n", url);
+    int pid;
+    //printf("WE WANT TO KILL %i\n", sscanf(url, "/api/processes/%d/signal", &pid));
+    //printf("signal in url: %i\n", strstr(url, "/signal"));
+    //printf("renice in url: %i\n", strstr(url, "/renice"));
+    //printf("other in url: %i\n", strstr(url, "/other"));
     // GET /api/processes
     if (!strcmp(method, "GET") && !strcmp(url, "/api/processes"))
         return handle_process_list(conn);
@@ -19,7 +26,8 @@ int route_request(struct MHD_Connection *conn,
     {
         int pid;
         if (!strcmp(method, "POST") &&
-            sscanf(url, "/api/processes/%d/signal", &pid) == 1)
+            sscanf(url, "/api/processes/%d/signal", &pid) == 1 &&
+            strstr(url, "/signal"))
         {
             return handle_signal(conn, pid, body);
         }
@@ -29,11 +37,24 @@ int route_request(struct MHD_Connection *conn,
     {
         int pid;
         if (!strcmp(method, "POST") &&
-            sscanf(url, "/api/processes/%d/renice", &pid) == 1)
+            sscanf(url, "/api/processes/%d/renice", &pid) == 1 &&
+            strstr(url, "/renice"))
         {
             return handle_renice(conn, pid, body);
         }
     }
+
+    // POST /api/processes/test_post
+    {
+        int pid;
+        if (!strcmp(method, "POST") &&
+            sscanf(url, "/api/processes/test_post") == 0)
+        {
+            return handle_test_post(conn, body);
+        }
+    }
+
+    
 
     // POST /api/processes/{pid}/limit/cpu
     {

@@ -24,17 +24,61 @@ int handle_renice(struct MHD_Connection *conn, int pid, const char *body) {
     printf("[limit_routes] renice pid=%d to nice=%ld\n", pid, nice_val);
     if (nice_val < -20 || nice_val > 19) {
         fprintf(stderr, "[limit_routes] bad nice %ld\n", nice_val);
-        return MHD_HTTP_BAD_REQUEST;
+
+        const char *response_str = "Bad nice value";
+        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str),
+                                                                    (void *)response_str,
+                                                                    MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(resp, "Connection", "close");
+
+        int ret = MHD_queue_response(conn, MHD_HTTP_BAD_REQUEST, resp);
+        MHD_destroy_response(resp);
+        return ret;
+        //return MHD_HTTP_BAD_REQUEST;
     }
     if (renice_process(pid, (int)nice_val) == 0) {
         printf("[limit_routes] renice succeeded\n");
-        return MHD_HTTP_NO_CONTENT;
+
+        const char *response_str = "Created";
+        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str),
+                                                                    (void *)response_str,
+                                                                    MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(resp, "Connection", "close");
+
+        int ret = MHD_queue_response(conn, MHD_HTTP_CREATED, resp);
+        MHD_destroy_response(resp);
+        return ret;
+        //return MHD_HTTP_NO_CONTENT;
     } else {
         fprintf(stderr,
                 "[limit_routes] renice_process failed: %s\n",
                 strerror(errno));
-        return MHD_HTTP_INTERNAL_SERVER_ERROR;
+        const char *response_str = "Renice failed (internal server error)";
+        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str),
+                                                                    (void *)response_str,
+                                                                    MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(resp, "Connection", "close");
+
+        int ret = MHD_queue_response(conn, MHD_HTTP_INTERNAL_SERVER_ERROR, resp);
+        MHD_destroy_response(resp);
+        return ret;
+        //return MHD_HTTP_INTERNAL_SERVER_ERROR;
     }
+}
+
+int handle_test_post(struct MHD_Connection *conn, const char *body) {
+    printf("test successfully entered handle\n");
+    
+    // TERMINATE CONNECTION AFTER ONE PING
+    const char *response_str = "Created";
+    struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str),
+                                                                (void *)response_str,
+                                                                MHD_RESPMEM_PERSISTENT);
+    MHD_add_response_header(resp, "Connection", "close");
+
+    int ret = MHD_queue_response(conn, MHD_HTTP_CREATED, resp);
+    MHD_destroy_response(resp);
+    return ret;
 }
 
 int handle_cpu_limit(struct MHD_Connection *conn, int pid, const char *body) {
