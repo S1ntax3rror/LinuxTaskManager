@@ -1,6 +1,6 @@
-#include "limit_routes.h"
-#include "core_interface.h"
-#include "server.h"
+#include "../include/limit_routes.h"
+#include "../include/core_interface.h"
+#include "../include/server.h"
 #include <cjson/cJSON.h>
 #include <stdio.h>
 #include <errno.h>

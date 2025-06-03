@@ -1,6 +1,6 @@
-#include "stats_routes.h"
-#include "core_interface.h"
-#include "server.h"
+#include "../include/stats_routes.h"
+#include "../../c-core/include/core_interface.h"
+#include "../include/server.h"
 #include <string.h>
 #include <cjson/cJSON.h>
 
