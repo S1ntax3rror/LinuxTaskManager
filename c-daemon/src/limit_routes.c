@@ -83,19 +83,40 @@ int handle_test_post(struct MHD_Connection *conn, const char *body) {
 
 int handle_cpu_limit(struct MHD_Connection *conn, int pid, const char *body) {
     long secs = limit_routes_json_get_long(body, "limit");
-    printf("[limit_routes] cpu‐limit pid=%d to %lds\n", pid, secs);
+    printf("[limit_routes] cpu limit pid=%d to %lds\n", pid, secs);
     if (secs < 0) {
         fprintf(stderr, "[limit_routes] bad cpu limit %ld\n", secs);
-        return MHD_HTTP_BAD_REQUEST;
+        const char *response_str = "Bad cpu limit";
+        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str), (void *)response_str, MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(resp, "Connection", "close");
+
+        int ret = MHD_queue_response(conn, MHD_HTTP_BAD_REQUEST, resp);
+        MHD_destroy_response(resp);
+        return ret;
+        //return MHD_HTTP_BAD_REQUEST;
     }
     if (set_cpu_limit(pid, (rlim_t)secs) == 0) {
         printf("[limit_routes] set_cpu_limit succeeded\n");
-        return MHD_HTTP_NO_CONTENT;
+        const char *response_str = "Successfully limited cpu";
+        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str), (void *)response_str, MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(resp, "Connection", "close");
+
+        int ret = MHD_queue_response(conn, MHD_HTTP_NO_CONTENT, resp);
+        MHD_destroy_response(resp);
+        return ret;
+        //return MHD_HTTP_NO_CONTENT;
     } else {
         fprintf(stderr,
                 "[limit_routes] set_cpu_limit failed: %s\n",
                 strerror(errno));
-        return MHD_HTTP_INTERNAL_SERVER_ERROR;
+        const char *response_str = "Internal server error, set CPU limit failed";
+        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str), (void *)response_str, MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(resp, "Connection", "close");
+
+        int ret = MHD_queue_response(conn, MHD_HTTP_INTERNAL_SERVER_ERROR, resp);
+        MHD_destroy_response(resp);
+        return ret;
+        //return MHD_HTTP_INTERNAL_SERVER_ERROR;
     }
 }
 
@@ -104,16 +125,37 @@ int handle_ram_limit(struct MHD_Connection *conn, int pid, const char *body) {
     printf("[limit_routes] ram‐limit pid=%d to %ldMB\n", pid, mb);
     if (mb < 0) {
         fprintf(stderr, "[limit_routes] bad ram limit %ld\n", mb);
-        return MHD_HTTP_BAD_REQUEST;
+        const char *response_str = "Bad ram limit";
+        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str), (void *)response_str, MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(resp, "Connection", "close");
+
+        int ret = MHD_queue_response(conn, MHD_HTTP_BAD_REQUEST, resp);
+        MHD_destroy_response(resp);
+        return ret;
+        //return MHD_HTTP_BAD_REQUEST;
     }
     rlim_t bytes = (rlim_t)mb * 1024 * 1024;
     if (set_ram_limit(pid, bytes) == 0) {
         printf("[limit_routes] set_ram_limit succeeded\n");
-        return MHD_HTTP_NO_CONTENT;
+        const char *response_str = "set ram limit succeeded";
+        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str), (void *)response_str, MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(resp, "Connection", "close");
+
+        int ret = MHD_queue_response(conn, MHD_HTTP_NO_CONTENT, resp);
+        MHD_destroy_response(resp);
+        return ret;
+        //return MHD_HTTP_NO_CONTENT;
     } else {
         fprintf(stderr,
                 "[limit_routes] set_ram_limit failed: %s\n",
                 strerror(errno));
-        return MHD_HTTP_INTERNAL_SERVER_ERROR;
+        const char *response_str = "set ram limit failed";
+        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(response_str), (void *)response_str, MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(resp, "Connection", "close");
+
+        int ret = MHD_queue_response(conn, MHD_HTTP_INTERNAL_SERVER_ERROR, resp);
+        MHD_destroy_response(resp);
+        return ret;
+        //return MHD_HTTP_INTERNAL_SERVER_ERROR;
     }
 }
