@@ -1,12 +1,12 @@
 #define _GNU_SOURCE   // for prlimit(2)
-#include "core_interface.h"
+#include "../include/core_interface.h"
 #include <sys/resource.h>  // prlimit, setpriority
 #include <sys/types.h>
 #include <signal.h>
 #include <errno.h>
-#include "general_stat_query.h"
-#include "trimmed_info.h"
-#include "memory_stats.h"
+#include "../include/general_stat_query.h"
+#include "../include/trimmed_info.h"
+#include "../include/memory_stats.h"
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/time.h>

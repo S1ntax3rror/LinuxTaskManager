@@ -1,6 +1,6 @@
-#include "process_routes.h"
-#include "core_interface.h"
-#include "server.h"
+#include "../include/process_routes.h"
+#include "../../c-core/include/core_interface.h"
+#include "../include/server.h"
 #include <cjson/cJSON.h>
 #include <signal.h>
 #include <ctype.h>

@@ -1,8 +1,8 @@
-#include "routes.h"
-#include "process_routes.h"   // handle_process_list, handle_signal
-#include "limit_routes.h"     // handle_renice, handle_cpu_limit, handle_ram_limit
-#include "stats_routes.h"     // dispatch_stats_routes
-#include "server.h"
+#include "../include/routes.h"
+#include "../include/process_routes.h"   // handle_process_list, handle_signal
+#include "../include/limit_routes.h"     // handle_renice, handle_cpu_limit, handle_ram_limit
+#include "../include/stats_routes.h"     // dispatch_stats_routes
+#include "../include/server.h"
 #include <microhttpd.h>
 #include <string.h>
 

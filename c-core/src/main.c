@@ -6,16 +6,16 @@
 #include <sys/time.h>
 #include <stdint.h>
 
-#include "proc_stat.h"
-#include "utils.h"
-#include "general_stat_query.h"
-#include "cpu_usage.h"
-#include "memory_stats.h"
-#include "proc_entry.h"
-#include "trimmed_info.h"
-#include "process_sort.h"
+#include "../include/proc_stat.h"
+#include "../include/utils.h"
+#include "../include/general_stat_query.h"
+#include "../include/cpu_usage.h"
+#include "../include/memory_stats.h"
+#include "../include/proc_entry.h"
+#include "../include/trimmed_info.h"
+#include "../include/process_sort.h"
 
-#define MAX_PROCS 2048
+#define MAX_PROCS 4096
 #define DOWN_TIME 2000000  //microseconds // 200000 for 200ms (to test i did 2000000 for 2s)
 
 
@@ -38,7 +38,7 @@ int main() {
         history[i].latest_index = 0;
     }
 
-    int* num_str;
+    //int* num_str;
     
     DIR *dp = opendir("/proc"); // open proc directory
     if (dp == NULL) {           // make sure it is opened correctly
@@ -55,17 +55,15 @@ int main() {
     printf("Available: %.2f MB\n", meminfo.mem_available_kb / 1024.0);
     printf("Buffers: %.2f MB\n", meminfo.buffers_kb / 1024.0);
     printf("Cached: %.2f MB\n\n", meminfo.cached_kb / 1024.0);
-    
     char* stat_data = read_general_stat("/proc/stat");
     general_stat general_stat_container;
     split_general_stat_string(stat_data, &general_stat_container);
     print_general_stat(&general_stat_container);
-    exit(0);
+
     int num_folders = count_folders("/proc"); // INITIALIZE LIST WITH ENOUGH SPACE FOR ALL PROCESS STATS
     printf("%i folders in /proc. Allocating space for %i potential stat lists. \n", num_folders, num_folders);
-    proc_stat process_statistics_array[num_folders];    
-    int current_list_entry_index = 0;
-    
+    //proc_stat process_statistics_array[num_folders];    
+    //int current_list_entry_index = 0;
     
     proc_entry processes[MAX_PROCS];
     int proc_count = 0;
@@ -97,12 +95,16 @@ int main() {
             if (proc_count >= MAX_PROCS) {
                 printf("to many processes\n");
                 break;
-
             }
+            printf("PID %i\n", processes[proc_count-1].pid);
         }
     }
+    printf("PID %i\n", processes[proc_count-1].pid);
+
     closedir(dp);
-    int loopcount = 0;//for testing
+    printf("starting loop\n");
+
+    //int loopcount = 0;//for testing
     while(1){
 
     
@@ -143,8 +145,11 @@ int main() {
             snapshot.ram_percent =
                 (snapshot.rss * page_size * 100.0) / (meminfo.mem_total_kb * 1024.0);
 
-            // 🔍 Check if this PID existed in before_info 
             int proc_index = -1;
+            
+            exit(0);
+            printf("proc %i", processes[1].pid);
+
 
             for (int i = 0; i < proc_count; i++) {
                 if (processes[i].pid == pid) {
@@ -156,6 +161,7 @@ int main() {
                     break;
                 }
             }
+
 
             if (proc_index == -1 && proc_count < MAX_PROCS) {
                 processes[proc_count].pid = pid;

@@ -1,5 +1,5 @@
-#include "server.h"
-#include "routes.h"
+#include "../include/server.h"
+#include "../include/routes.h"
 #include <microhttpd.h>
 #include <string.h>
 #include <stdlib.h>
