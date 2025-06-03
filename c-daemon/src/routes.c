@@ -19,7 +19,7 @@ int route_request(struct MHD_Connection *conn,
     //printf("renice in url: %i\n", strstr(url, "/renice"));
     //printf("other in url: %i\n", strstr(url, "/other"));
     // GET /api/processes
-    if (!strcmp(method, "GET") && !strcmp(url, "/api/processes"))
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/processes") && strstr(url, "/api/processes"))
         return handle_process_list(conn);
 
     // POST /api/processes/{pid}/signal
@@ -48,19 +48,19 @@ int route_request(struct MHD_Connection *conn,
     {
         int pid;
         if (!strcmp(method, "POST") &&
-            sscanf(url, "/api/processes/test_post") == 0)
+            sscanf(url, "/api/processes/test_post") == 0 &&
+            strstr(url, "/test_post"))
         {
             return handle_test_post(conn, body);
         }
     }
 
-    
-
     // POST /api/processes/{pid}/limit/cpu
     {
         int pid;
         if (!strcmp(method, "POST") &&
-            sscanf(url, "/api/processes/%d/limit/cpu", &pid) == 1)
+            sscanf(url, "/api/processes/%d/limit/cpu", &pid) == 1 &&
+            strstr(url, "/limit/cpu"))
         {
             return handle_cpu_limit(conn, pid, body);
         }
@@ -70,7 +70,8 @@ int route_request(struct MHD_Connection *conn,
     {
         int pid;
         if (!strcmp(method, "POST") &&
-            sscanf(url, "/api/processes/%d/limit/ram", &pid) == 1)
+            sscanf(url, "/api/processes/%d/limit/ram", &pid) == 1 &&
+            strstr(url, "/limit/ram"))
         {
             return handle_ram_limit(conn, pid, body);
         }
