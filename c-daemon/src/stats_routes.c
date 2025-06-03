@@ -1,11 +1,10 @@
-// stats_api.c
-#include "stats_api.h"
-#include "core_interface.h"
-#include "server.h"
-
+#include "../include/stats_routes.h"
+#include "../../c-core/include/core_interface.h"
+#include "../include/server.h"
+#include <string.h>
 #include <cjson/cJSON.h>
 
-int handle_cpu_stats(struct MHD_Connection *conn) {
+static int handle_cpu_stats(struct MHD_Connection *conn) {
     general_stat gs = get_cpu_stats();
 
     cJSON *root = cJSON_CreateObject();
@@ -42,4 +41,14 @@ int handle_cpu_stats(struct MHD_Connection *conn) {
     cJSON_AddNumberToObject(root, "num_cpus",      gs.num_cpus);
 
     return send_json_response(conn, root);
+}
+
+int dispatch_stats_routes(struct MHD_Connection *conn,
+                          const char *url,
+                          const char *method)
+{
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/cpu")) {
+        return handle_cpu_stats(conn);
+    }
+    return 0;
 }

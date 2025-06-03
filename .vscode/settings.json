@@ -1,6 +1,8 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
     "files.associations": {
-        "memory_stats.h": "c"
+        "memory_stats.h": "c",
+        "resource.h": "c",
+        "prctl.h": "c"
     }
 }

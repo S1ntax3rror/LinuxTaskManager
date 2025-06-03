@@ -1,4 +1,4 @@
-#include "general_stat_query.h"
+#include "../include/general_stat_query.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -193,7 +193,7 @@ char* read_general_stat(const char* path) {
         return NULL;
     }
     
-    size_t size = 0, capacity = 10000;
+size_t capacity = 10000;
     char* data = malloc(capacity);
 
     if (data == NULL) {
@@ -214,7 +214,7 @@ char* read_general_stat(const char* path) {
         // Handle the case where the file might have been shorter than expected
         data[bytes_read] = '\0';
     } else {
-        data[capacity] = '\0'; // Null-terminate the string
+        data[capacity-1] = '\0'; // Null-terminate the string
     }
 
     fclose(fp);
