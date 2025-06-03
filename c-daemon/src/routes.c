@@ -18,6 +18,7 @@ int route_request(struct MHD_Connection *conn,
     //printf("signal in url: %i\n", strstr(url, "/signal"));
     //printf("renice in url: %i\n", strstr(url, "/renice"));
     //printf("other in url: %i\n", strstr(url, "/other"));
+    
     // GET /api/processes
     if (!strcmp(method, "GET") && !strcmp(url, "/api/processes") && strstr(url, "/api/processes"))
         return handle_process_list(conn);
