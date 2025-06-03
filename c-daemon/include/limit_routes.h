@@ -27,4 +27,7 @@ int handle_ram_limit(struct MHD_Connection *conn,
                      int pid,
                      const char *body);
 
+int handle_test_post(struct MHD_Connection *conn,
+                     const char *body);
+
 #endif // LIMIT_ROUTES_H
