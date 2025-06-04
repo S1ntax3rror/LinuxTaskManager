@@ -15,11 +15,6 @@
   <link th:href="@{/css/style.css}" rel="stylesheet" />
 </head>
 <body class="bg-light">
-
-  <!-- 
-    We use container-fluid with NO horizontal margins (mx-0)
-    so the table can span the entire viewport width.
-  -->
   <div class="container-fluid px-0 py-5">
     <div class="text-center mb-4">
       <img
@@ -118,8 +113,19 @@
       <div class="col-sm-4"></div>
     </div>
 
-    <!-- Sort Buttons -->
-    <div class="d-flex justify-content-end mb-3">
+    <!-- Checkbox + Sort Buttons -->
+    <div class="d-flex justify-content-end align-items-center mb-3">
+      <div class="form-check form-check-inline me-3">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="chk-hide-kernel"
+          onchange="fetchProcs()"
+        />
+        <label class="form-check-label" for="chk-hide-kernel">
+          Hide Kernel Threads
+        </label>
+      </div>
       <div class="btn-group btn-group-sm">
         <button
           id="btn-sort-cpu"
@@ -138,7 +144,7 @@
       </div>
     </div>
 
-    <!-- Table Section: no horizontal padding on the parent -->
+    <!-- Table Section: note Prio and Nice are adjacent -->
     <div class="card shadow-sm mx-0">
       <div class="card-body p-0">
         <div class="table-responsive">
@@ -148,6 +154,7 @@
                 <th scope="col">PID</th>
                 <th scope="col">User</th>
                 <th scope="col">Prio</th>
+                <th scope="col">Nice</th>
                 <th scope="col">VIRT (KiB)</th>
                 <th scope="col">RES (KiB)</th>
                 <th scope="col">SHR (KiB)</th>
@@ -155,7 +162,6 @@
                 <th scope="col">Up Time (s)</th>
                 <th scope="col">Name</th>
                 <th scope="col">State</th>
-                <th scope="col">Nice</th>
                 <th scope="col">% CPU</th>
                 <th scope="col">% RAM</th>
                 <th scope="col">Action</th>

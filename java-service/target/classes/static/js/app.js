@@ -12,6 +12,14 @@ function truncate(str, maxLen) {
     : str;
 }
 
+/**
+ * Returns true if this trimmed_info represents a kernel thread.
+ * Kernel threads have no cmdline, so proc.cmd === "".
+ */
+function isKernelThread(proc) {
+  return (proc.cmd === "" || proc.cmd.trim() === "");
+}
+
 function setSort(f) {
   sortField = f;
   document.getElementById('btn-sort-cpu')
@@ -25,37 +33,71 @@ async function fetchProcs() {
   try {
     const res = await fetch('/api/processes');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const procs = await res.json();
+    let procs = await res.json();
 
+    // 1) Sort by chosen field
     procs.sort((a, b) =>
       sortField === 'cpu'
         ? b.cpuPercent - a.cpuPercent
         : b.ramPercent - a.ramPercent
     );
 
+    // 2) Hide kernel threads if checkbox is checked:
+    const hideKernel = document.getElementById('chk-hide-kernel').checked;
+    if (hideKernel) {
+      procs = procs.filter(p => !isKernelThread(p));
+    }
+
+    // 3) Build table rows (columns must match index.html <th> order)
     document.getElementById('proc-table').innerHTML =
       procs.map(p => {
-        // We choose to truncate the “cmd” field to 60 characters.
-        const shortCmd = truncate(p.cmd, 60);
+        // Truncate the “cmd” field to 50 characters for compact display
+        const shortCmd = truncate(p.cmd, 50);
 
         return `
         <tr>
+          <!-- 1) PID -->
           <td>${p.pid}</td>
+
+          <!-- 2) User (username) -->
           <td>${p.username}</td>
+
+          <!-- 3) Prio -->
           <td>${p.prio}</td>
+
+          <!-- 4) Nice -->
+          <td>${p.nice}</td>
+
+          <!-- 5) VIRT (KiB) -->
           <td>${p.virt}</td>
+
+          <!-- 6) RES (KiB) -->
           <td>${p.res}</td>
+
+          <!-- 7) SHR (KiB) -->
           <td>${p.shared}</td>
-          <!-- Put full command in title, truncated display in cell -->
+
+          <!-- 8) COMMAND (truncated, with full command in title) -->
           <td title="${p.cmd.replace(/"/g, '&quot;')}">
             ${shortCmd}
           </td>
+
+          <!-- 9) Up Time (s) -->
           <td>${p.upTime.toFixed(1)}</td>
+
+          <!-- 10) Name (the “comm” field) -->
           <td>${p.comm}</td>
+
+          <!-- 11) State -->
           <td>${p.state}</td>
-          <td>${p.nice}</td>
+
+          <!-- 12) % CPU -->
           <td>${p.cpuPercent.toFixed(1)}</td>
+
+          <!-- 13) % RAM -->
           <td>${p.ramPercent.toFixed(1)}</td>
+
+          <!-- 14) Action (Kill button) -->
           <td>
             <button class="btn btn-sm btn-danger me-1"
                     onclick="doSignal(${p.pid}, 'KILL')">

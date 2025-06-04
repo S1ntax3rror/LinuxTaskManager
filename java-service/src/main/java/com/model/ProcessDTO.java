@@ -2,49 +2,44 @@ package com.model;
 
 import lombok.Data;
 
-/**
- * Maps exactly to the C struct `trimmed_info`.
- */
 @Data
 public class ProcessDTO {
     /** Process ID */
-    private int    pid;
+    private int     pid;
+
+    /** Full command-line (spaces instead of nulls). Empty ⇒ kernel thread. */
+    private String  cmd;
 
     /** Executable name, e.g. "bash" */
-    private String comm;
+    private String  comm;
 
-    /** State character, e.g. 'R', 'S', 'D' */
-    private char   state;
+    /** Process state (e.g. 'R', 'S', 'D') */
+    private char    state;
 
     /** CPU usage (%) since last snapshot */
-    private double cpuPercent;
+    private double  cpuPercent;
 
     /** RAM usage (%) at this snapshot */
-    private double ramPercent;
+    private double  ramPercent;
 
     /** Nice value */
-    private int    nice;
+    private int     nice;
 
-    /* ─── NEW FIELDS ─── */
+    /** Username (owner of the process) */
+    private String  username;
 
-    /** Owner’s username */
-    private String username;
-
-    /** Priority (prio) */
-    private int    prio;
+    /** Priority (kernel “prio” field) */
+    private int     prio;
 
     /** Virtual memory in KiB */
-    private long   virt;
+    private long    virt;
 
-    /** Resident memory in KiB */
-    private long   res;
+    /** Resident memory (in KiB) */
+    private long    res;
 
-    /** Shared memory in KiB */
-    private long   shared;
+    /** Shared memory (in KiB) */
+    private long    shared;
 
-    /** Full command line including args */
-    private String cmd;
-
-    /** Up‐time in seconds */
-    private double upTime;
+    /** How many seconds this process has been running */
+    private double  upTime;
 }

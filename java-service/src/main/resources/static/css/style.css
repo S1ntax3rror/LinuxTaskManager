@@ -1,6 +1,6 @@
 /* web-ui/src/main/resources/static/css/style.css */
 
-/* Make the table’s font even smaller */
+/* Make the table’s font very small */
 .table {
   font-size: 0.75rem;
 }
@@ -14,13 +14,13 @@
   padding-right: 0.4rem;
 }
 
-/* Prevent any wrapping inside cells */
+/* Prevent wrapping inside cells */
 .table th,
 .table td {
   white-space: nowrap;
 }
 
-/* Keep horizontal scrolling for overflow */
+/* Ensure horizontal scrolling if columns exceed width */
 .table-responsive {
   overflow-x: auto;
 }

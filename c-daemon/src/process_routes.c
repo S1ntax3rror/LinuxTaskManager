@@ -41,24 +41,33 @@ int handle_process_list(struct MHD_Connection *conn) {
     for (int i = 0; i < count; ++i) {
         cJSON *o = cJSON_CreateObject();
 
-        /* Existing fields */
-        cJSON_AddNumberToObject(o, "pid",         list[i].pid);
-        cJSON_AddStringToObject(o, "comm",        list[i].comm);
-        char s[2] = { list[i].state, '\0' };
-        cJSON_AddStringToObject(o, "state",       s);
-        cJSON_AddNumberToObject(o, "cpuPercent",  list[i].cpu_percent);
-        cJSON_AddNumberToObject(o, "ramPercent",  list[i].ram_percent);
-        cJSON_AddNumberToObject(o, "nice",        list[i].nice);
+        cJSON_AddNumberToObject(o, "pid",        list[i].pid);
 
-        /* NEW FIELDS */
-        cJSON_AddStringToObject(o, "username",    list[i].username);
-        cJSON_AddNumberToObject(o, "prio",        list[i].prio);
-        cJSON_AddNumberToObject(o, "virt",        list[i].virt_kb);
-        cJSON_AddNumberToObject(o, "res",         list[i].res_kb);
-        cJSON_AddNumberToObject(o, "shared",      list[i].shared_kb);
-        cJSON_AddStringToObject(o, "cmd",         list[i].cmd);
-        cJSON_AddNumberToObject(o, "upTime",      list[i].up_time_seconds);
+        // ← NEW: expose the full command‐line (empty string for kernel threads)
+        cJSON_AddStringToObject(o, "cmd",        list[i].cmd);
 
+        cJSON_AddStringToObject(o, "comm",       list[i].comm);
+        char state_str[2] = { list[i].state, '\0' };
+        cJSON_AddStringToObject(o, "state",      state_str);
+
+        // CPU / RAM / nice
+        cJSON_AddNumberToObject(o, "cpuPercent", list[i].cpu_percent);
+        cJSON_AddNumberToObject(o, "ramPercent", list[i].ram_percent);
+        cJSON_AddNumberToObject(o, "nice",       list[i].nice);
+
+        // ← NEW: expose the username (owner) and priority
+        cJSON_AddStringToObject(o, "username", list[i].username);
+        cJSON_AddNumberToObject(o, "prio",     list[i].prio);
+
+        // ← NEW: expose VIRT, RES, SHARED (all in KiB)
+        cJSON_AddNumberToObject(o, "virt",   list[i].virt_kb);
+        cJSON_AddNumberToObject(o, "res",    list[i].res_kb);
+        cJSON_AddNumberToObject(o, "shared", list[i].shared_kb);
+
+        // ← NEW: expose up‐time in seconds
+        cJSON_AddNumberToObject(o, "upTime", list[i].up_time_seconds);
+
+        // Append this object to the array
         cJSON_AddItemToArray(arr, o);
     }
 
