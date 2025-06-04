@@ -23,10 +23,21 @@ public class ProcessController {
 
     @PostMapping("/{pid}/signal")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void signal(@PathVariable int pid,
-                       @RequestBody SignalRequest body) {
-        svc.sendSignal(pid, body.getCmd());
+    public void signal(
+            @PathVariable int pid,
+            @RequestBody(required = false) SignalRequest body
+    ) {
+        // Default to "KILL" if no body or empty cmd
+        String cmd = "KILL";
+        if (body != null && body.getCmd() != null && !body.getCmd().trim().isEmpty()) {
+            cmd = body.getCmd().trim();
+        }
+
+        // Attempt to forward to C-daemon. If C-daemon returns 4xx/5xx or is down,
+        // let those exceptions bubble up so the front-end sees a network error.
+        svc.sendSignal(pid, cmd);
     }
+
 
     @PostMapping("/{pid}/renice")
     @ResponseStatus(HttpStatus.NO_CONTENT)

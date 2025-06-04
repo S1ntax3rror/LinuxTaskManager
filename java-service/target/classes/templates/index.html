@@ -1,93 +1,178 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Linux Task Manager</title>
-  <link rel="icon" th:href="@{/ltm_icon.ico}" type="image/x-icon"/>
+  <link rel="icon" th:href="@{/ltm_icon.ico}" type="image/x-icon" />
+
+  <!-- Bootstrap CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-    rel="stylesheet"/>
-  <link th:href="@{/css/style.css}" rel="stylesheet"/>
+    rel="stylesheet"
+  />
+
+  <!-- Custom CSS -->
+  <link th:href="@{/css/style.css}" rel="stylesheet" />
 </head>
 <body class="bg-light">
-  <div class="container my-5">
+
+  <!-- 
+    We use container-fluid with NO horizontal margins (mx-0)
+    so the table can span the entire viewport width.
+  -->
+  <div class="container-fluid px-0 py-5">
     <div class="text-center mb-4">
-      <img th:src="@{/ltm_icon.ico}" alt="LTM" class="me-2" style="width:48px;height:48px;">
+      <img
+        th:src="@{/ltm_icon.ico}"
+        alt="LTM"
+        style="width:48px; height:48px;"
+        class="me-2"
+      />
       <h1 class="d-inline align-middle">Linux Task Manager</h1>
     </div>
 
-    <!-- Renice -->
-    <div class="row g-2 mb-3">
-      <div class="col-sm">
-        <input id="in-pid-renice" type="number" class="form-control" placeholder="PID">
+    <!-- Renice Row -->
+    <div class="row g-1 mb-2">
+      <div class="col-sm-3">
+        <input
+          id="in-pid-renice"
+          type="number"
+          class="form-control form-control-sm"
+          placeholder="PID"
+        />
       </div>
-      <div class="col-sm">
-        <input id="in-nice" type="number" class="form-control" placeholder="New nice">
+      <div class="col-sm-3">
+        <input
+          id="in-nice"
+          type="number"
+          class="form-control form-control-sm"
+          placeholder="New nice"
+        />
       </div>
-      <div class="col-auto">
-        <button class="btn btn-warning w-100" onclick="doRenice()">Renice</button>
+      <div class="col-sm-2">
+        <button
+          class="btn btn-warning btn-sm w-100"
+          onclick="doRenice()"
+        >
+          Renice
+        </button>
       </div>
+      <div class="col-sm-4"></div>
     </div>
 
-    <!-- CPU Limit -->
-    <div class="row g-2 mb-3">
-      <div class="col-sm">
-        <input id="in-pid-cpu" type="number" class="form-control" placeholder="PID">
+    <!-- CPU Limit Row -->
+    <div class="row g-1 mb-2">
+      <div class="col-sm-3">
+        <input
+          id="in-pid-cpu"
+          type="number"
+          class="form-control form-control-sm"
+          placeholder="PID"
+        />
       </div>
-      <div class="col-sm">
-        <input id="in-cpu-limit" type="number" class="form-control" placeholder="CPU secs">
+      <div class="col-sm-3">
+        <input
+          id="in-cpu-limit"
+          type="number"
+          class="form-control form-control-sm"
+          placeholder="CPU secs"
+        />
       </div>
-      <div class="col-auto">
-        <button class="btn btn-primary w-100" onclick="doCpuLimit()">Limit CPU</button>
+      <div class="col-sm-2">
+        <button
+          class="btn btn-success btn-sm w-100"
+          onclick="doCpuLimit()"
+        >
+          Limit CPU
+        </button>
       </div>
+      <div class="col-sm-4"></div>
     </div>
 
-    <!-- RAM Limit -->
-    <div class="row g-2 mb-4">
-      <div class="col-sm">
-        <input id="in-pid-ram" type="number" class="form-control" placeholder="PID">
+    <!-- RAM Limit Row -->
+    <div class="row g-1 mb-4">
+      <div class="col-sm-3">
+        <input
+          id="in-pid-ram"
+          type="number"
+          class="form-control form-control-sm"
+          placeholder="PID"
+        />
       </div>
-      <div class="col-sm">
-        <input id="in-ram-limit" type="number" class="form-control" placeholder="RAM MB">
+      <div class="col-sm-3">
+        <input
+          id="in-ram-limit"
+          type="number"
+          class="form-control form-control-sm"
+          placeholder="RAM MB"
+        />
       </div>
-      <div class="col-auto">
-        <button class="btn btn-primary w-100" onclick="doRamLimit()">Limit RAM</button>
+      <div class="col-sm-2">
+        <button
+          class="btn btn-success btn-sm w-100"
+          onclick="doRamLimit()"
+        >
+          Limit RAM
+        </button>
       </div>
+      <div class="col-sm-4"></div>
     </div>
 
-    <!-- Sort -->
-    <div class="d-flex justify-content-end mb-2">
-      <div class="btn-group">
-        <button id="btn-sort-cpu"
-                class="btn btn-outline-secondary active"
-                onclick="setSort('cpu')">
+    <!-- Sort Buttons -->
+    <div class="d-flex justify-content-end mb-3">
+      <div class="btn-group btn-group-sm">
+        <button
+          id="btn-sort-cpu"
+          class="btn btn-outline-secondary active"
+          onclick="setSort('cpu')"
+        >
           Sort by CPU
         </button>
-        <button id="btn-sort-ram"
-                class="btn btn-outline-secondary"
-                onclick="setSort('ram')">
+        <button
+          id="btn-sort-ram"
+          class="btn btn-outline-secondary"
+          onclick="setSort('ram')"
+        >
           Sort by RAM
         </button>
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="card shadow-sm">
+    <!-- Table Section: no horizontal padding on the parent -->
+    <div class="card shadow-sm mx-0">
       <div class="card-body p-0">
-        <table class="table table-striped table-hover mb-0">
-          <thead class="table-dark">
-            <tr>
-              <th>PID</th><th>Name</th><th>State</th><th>Nice</th>
-              <th>% CPU</th><th>% RAM</th><th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="proc-table"></tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover mb-0">
+            <thead class="table-dark small">
+              <tr>
+                <th scope="col">PID</th>
+                <th scope="col">User</th>
+                <th scope="col">Prio</th>
+                <th scope="col">VIRT (KiB)</th>
+                <th scope="col">RES (KiB)</th>
+                <th scope="col">SHR (KiB)</th>
+                <th scope="col">COMMAND</th>
+                <th scope="col">Up Time (s)</th>
+                <th scope="col">Name</th>
+                <th scope="col">State</th>
+                <th scope="col">Nice</th>
+                <th scope="col">% CPU</th>
+                <th scope="col">% RAM</th>
+                <th scope="col">Action</th>
+              </tr>
+            </thead>
+            <tbody id="proc-table" class="small"></tbody>
+          </table>
+        </div> <!-- /.table-responsive -->
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap JS Bundle -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+  ></script>
+  <!-- Application JS -->
   <script th:src="@{/js/app.js}"></script>
 </body>
 </html>

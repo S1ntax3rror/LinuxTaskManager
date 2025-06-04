@@ -23,5 +23,28 @@ public class ProcessDTO {
     private double ramPercent;
 
     /** Nice value */
-    private int    nice;     // <— new
+    private int    nice;
+
+    /* ─── NEW FIELDS ─── */
+
+    /** Owner’s username */
+    private String username;
+
+    /** Priority (prio) */
+    private int    prio;
+
+    /** Virtual memory in KiB */
+    private long   virt;
+
+    /** Resident memory in KiB */
+    private long   res;
+
+    /** Shared memory in KiB */
+    private long   shared;
+
+    /** Full command line including args */
+    private String cmd;
+
+    /** Up‐time in seconds */
+    private double upTime;
 }

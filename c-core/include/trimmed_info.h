@@ -9,7 +9,16 @@ typedef struct trimmed_info {
     int       pid;
     char      comm[512];
     char      state;
-    int       nice;            // <-- newly added
+    int       nice;  
+    
+      /* ─── NEW FIELDS ─── */
+    char      username[64];      // process owner’s username
+    int       prio;              // priority from proc_stat.priority
+    unsigned long virt_kb;       // virtual memory size in KiB
+    unsigned long res_kb;        // resident set size in KiB
+    unsigned long shared_kb;     // shared “text” memory in KiB
+    char      cmd[4096];         // full command line (args)
+    double    up_time_seconds;   // how long this process has been running
 
     double    cpu_percent;
     double    ram_percent;

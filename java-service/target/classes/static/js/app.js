@@ -1,5 +1,17 @@
 let sortField = 'cpu';
 
+/**
+ * Truncate a string to `maxLen` characters.
+ * If the original string is longer, return the first maxLen
+ * characters + an ellipsis (…).
+ */
+function truncate(str, maxLen) {
+  if (!str) return "";
+  return (str.length > maxLen)
+    ? str.slice(0, maxLen) + "…"
+    : str;
+}
+
 function setSort(f) {
   sortField = f;
   document.getElementById('btn-sort-cpu')
@@ -22,9 +34,23 @@ async function fetchProcs() {
     );
 
     document.getElementById('proc-table').innerHTML =
-      procs.map(p => `
+      procs.map(p => {
+        // We choose to truncate the “cmd” field to 60 characters.
+        const shortCmd = truncate(p.cmd, 60);
+
+        return `
         <tr>
           <td>${p.pid}</td>
+          <td>${p.username}</td>
+          <td>${p.prio}</td>
+          <td>${p.virt}</td>
+          <td>${p.res}</td>
+          <td>${p.shared}</td>
+          <!-- Put full command in title, truncated display in cell -->
+          <td title="${p.cmd.replace(/"/g, '&quot;')}">
+            ${shortCmd}
+          </td>
+          <td>${p.upTime.toFixed(1)}</td>
           <td>${p.comm}</td>
           <td>${p.state}</td>
           <td>${p.nice}</td>
@@ -37,7 +63,8 @@ async function fetchProcs() {
             </button>
           </td>
         </tr>
-      `).join('');
+        `;
+      }).join('');
   } catch (e) {
     console.error('Failed to fetch processes:', e);
   }
