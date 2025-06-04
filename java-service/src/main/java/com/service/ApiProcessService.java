@@ -1,37 +1,66 @@
-// java-service/src/main/java/com/service/ApiProcessService.java
 package com.service;
 
-import java.util.*;
+import com.model.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import com.model.*;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class ApiProcessService {
-  private final RestTemplate rest;
-  private final String baseUrl;
 
-  public ApiProcessService(RestTemplate rest,
-                           @Value("${external.api.url}") String baseUrl) {
-    this.rest    = rest;
-    this.baseUrl = baseUrl;
-  }
+    private final RestTemplate rest;
+    private final String baseUrl;
 
-  public List<ProcessDTO> fetchProcesses() {
-    ProcessDTO[] arr = rest.getForObject(baseUrl + "/processes",
-                                         ProcessDTO[].class);
-    return arr == null
-         ? Collections.emptyList()
-         : Arrays.asList(arr);
-  }
+    public ApiProcessService(RestTemplate rest,
+                             @Value("${external.api.url}") String baseUrl) {
+        this.rest = rest;
+        this.baseUrl = baseUrl;
+    }
 
-  public void sendSignal(int pid, String cmd) {
-    SignalRequest req = new SignalRequest();
-    req.setCmd(cmd);
-    rest.postForLocation(
-      String.format("%s/processes/%d/signal", baseUrl, pid),
-      req
-    );
-  }
+    public List<ProcessDTO> fetchProcesses() {
+        ProcessDTO[] arr = rest.getForObject(baseUrl + "/processes", ProcessDTO[].class);
+        return arr == null
+             ? Collections.emptyList()
+             : Arrays.asList(arr);
+    }
+
+    public void sendSignal(int pid, String cmd) {
+        SignalRequest req = new SignalRequest();
+        req.setCmd(cmd);
+        rest.postForLocation(
+            String.format("%s/processes/%d/signal", baseUrl, pid),
+            req
+        );
+    }
+
+    public void renice(int pid, int nice) {
+        ReniceRequest req = new ReniceRequest();
+        req.setNice(nice);
+        rest.postForLocation(
+            String.format("%s/processes/%d/renice", baseUrl, pid),
+            req
+        );
+    }
+
+    public void limitCpu(int pid, int secs) {
+        LimitRequest req = new LimitRequest();
+        req.setLimit(secs);
+        rest.postForLocation(
+            String.format("%s/processes/%d/limit/cpu", baseUrl, pid),
+            req
+        );
+    }
+
+    public void limitRam(int pid, int mb) {
+        LimitRequest req = new LimitRequest();
+        req.setLimit(mb);
+        rest.postForLocation(
+            String.format("%s/processes/%d/limit/ram", baseUrl, pid),
+            req
+        );
+    }
 }

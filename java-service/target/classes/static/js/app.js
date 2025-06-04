@@ -1,75 +1,111 @@
-// default sort field
 let sortField = 'cpu';
 
-// change sort and update button states
-function setSort(field) {
-  sortField = field;
-
-  // toggle active classes
+function setSort(f) {
+  sortField = f;
   document.getElementById('btn-sort-cpu')
-          .classList.toggle('active', field === 'cpu');
+          .classList.toggle('active', f === 'cpu');
   document.getElementById('btn-sort-ram')
-          .classList.toggle('active', field === 'ram');
-
-  // immediately refresh
+          .classList.toggle('active', f === 'ram');
   fetchProcs();
 }
 
 async function fetchProcs() {
   try {
     const res = await fetch('/api/processes');
-    if (!res.ok) {
-      throw new Error(`Server error: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const procs = await res.json();
 
-    let procs = await res.json();
+    procs.sort((a, b) =>
+      sortField === 'cpu'
+        ? b.cpuPercent - a.cpuPercent
+        : b.ramPercent - a.ramPercent
+    );
 
-    // sort by chosen field descending
-    procs.sort((a, b) => {
-      if (sortField === 'cpu') {
-        return b.cpuPercent - a.cpuPercent;
-      } else {
-        return b.ramPercent - a.ramPercent;
-      }
-    });
-
-    const tbody = document.getElementById('proc-table');
-    tbody.innerHTML = procs.map(p => `
-      <tr>
-        <td>${p.pid}</td>
-        <td>${p.comm}</td>
-        <td>${p.state}</td>
-        <td>${p.cpuPercent.toFixed(1)}</td>
-        <td>${p.ramPercent.toFixed(1)}</td>
-        <td>
-          <button class="btn btn-sm btn-danger me-1"
-                  onclick="signal(${p.pid}, 'KILL')">Kill</button>
-          <button class="btn btn-sm btn-warning"
-                  onclick="signal(${p.pid}, 'RENICE')">Renice</button>
-        </td>
-      </tr>
-    `).join('');
+    document.getElementById('proc-table').innerHTML =
+      procs.map(p => `
+        <tr>
+          <td>${p.pid}</td>
+          <td>${p.comm}</td>
+          <td>${p.state}</td>
+          <td>${p.nice}</td>
+          <td>${p.cpuPercent.toFixed(1)}</td>
+          <td>${p.ramPercent.toFixed(1)}</td>
+          <td>
+            <button class="btn btn-sm btn-danger me-1"
+                    onclick="doSignal(${p.pid}, 'KILL')">
+              Kill
+            </button>
+          </td>
+        </tr>
+      `).join('');
   } catch (e) {
-    console.error('fetchProcs failed:', e);
+    console.error('Failed to fetch processes:', e);
   }
 }
 
-// signal helper stays the same
-async function signal(pid, cmd) {
+async function doSignal(pid, cmd) {
   try {
     const res = await fetch(`/api/processes/${pid}/signal`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cmd })
     });
-    if (!res.ok) {
-      throw new Error(`Signal failed: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    fetchProcs();
   } catch (e) {
-    console.error('signal error:', e);
+    alert(`Failed to send signal to PID ${pid}: ${e}`);
   }
 }
 
-// initial load + refresh every second
-fetchProcs();
-setInterval(fetchProcs, 1000);
+async function doRenice() {
+  const pid  = +document.getElementById('in-pid-renice').value;
+  const nice = +document.getElementById('in-nice').value;
+  try {
+    const res = await fetch(`/api/processes/${pid}/renice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nice })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    fetchProcs();
+  } catch (e) {
+    alert(`Failed to renice PID ${pid}: ${e}`);
+  }
+}
+
+async function doCpuLimit() {
+  const pid  = +document.getElementById('in-pid-cpu').value;
+  const secs = +document.getElementById('in-cpu-limit').value;
+  try {
+    const res = await fetch(`/api/processes/${pid}/limit/cpu`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit: secs })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    fetchProcs();
+  } catch (e) {
+    alert(`Failed to set CPU limit for PID ${pid}: ${e}`);
+  }
+}
+
+async function doRamLimit() {
+  const pid = +document.getElementById('in-pid-ram').value;
+  const mb  = +document.getElementById('in-ram-limit').value;
+  try {
+    const res = await fetch(`/api/processes/${pid}/limit/ram`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit: mb })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    fetchProcs();
+  } catch (e) {
+    alert(`Failed to set RAM limit for PID ${pid}: ${e}`);
+  }
+}
+
+window.addEventListener('load', () => {
+  fetchProcs();
+  setInterval(fetchProcs, 2000);
+});
