@@ -19,6 +19,6 @@ debug:
 	    src/general_stat_query.c src/cpu_usage.c   \
 	    src/memory_stats.c src/trimmed_info.c      \
 	    src/process_sort.c
-
+      
 clean:
 	rm -f process_monitor_query process_monitor_query_debug

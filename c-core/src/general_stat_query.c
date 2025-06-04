@@ -90,13 +90,18 @@ void calc_cpu_stats(general_stat* g_stat_pointer){
     uint64_t total_cpu_time = 0;
     for (int i=0;i<num_cpu;i++){
         cpu_stats core_stat = g_stat_pointer->cores[i];
-        print_cpu_stats(&core_stat);
+        //print_cpu_stats(&core_stat);
         total_nonproductive_time = total_nonproductive_time + core_stat.iowait + core_stat.idle;
         total_cpu_time += core_stat.user + core_stat.nice + core_stat.system + core_stat.idle + core_stat.iowait + core_stat.irq + core_stat.steal;
     }
-    float cpu_percent = total_nonproductive_time/total_cpu_time;
-    printf("total time nonprod: %li, total prod time: %li, total cpu percent: %f \n\n", total_nonproductive_time, total_cpu_time, cpu_percent);
-    g_stat_pointer->total_cpu_utilization_percent = total_nonproductive_time;
+    //float cpu_percent = total_nonproductive_time/total_cpu_time;
+    //printf("total time nonprod: %li, total prod time: %li, total cpu percent: %f \n\n", total_nonproductive_time, total_cpu_time, cpu_percent);
+    if (total_cpu_time > 0) {
+        g_stat_pointer->total_cpu_utilization_percent =
+            100.0 * (total_cpu_time - total_nonproductive_time) / total_cpu_time;
+    } else {
+        g_stat_pointer->total_cpu_utilization_percent = 0.0;
+    }
 }
 
 
@@ -174,7 +179,7 @@ void split_general_stat_string(char* inp_string, general_stat* stat_pointer){
                     char* num_str = get_seccond_arg(line, 14);
                     stat_pointer->procs_blocked = atoi(num_str);
                 } else {
-                    printf("Not parsed parameter: %s \n", first_word);
+                    //printf("Not parsed parameter: %s \n", first_word);
                 }
             }
         }
@@ -183,6 +188,15 @@ void split_general_stat_string(char* inp_string, general_stat* stat_pointer){
     }
     stat_pointer->num_cpus = cpu_count;
     calc_cpu_stats(stat_pointer);
+
+    read_memory_stats(&stat_pointer->memory);
+    // disk, net, gpu
+    read_disk_stats(&stat_pointer->disk);
+    read_network_stats(&stat_pointer->net);
+    
+    read_gpu_stats(&stat_pointer->gpu);
+    
+
 };
 
 
@@ -219,4 +233,110 @@ size_t capacity = 10000;
 
     fclose(fp);
     return data;
+}
+void read_disk_stats(disk_stats* disk) {
+    FILE* fp = fopen("/proc/diskstats", "r");
+    if (!fp) {
+        perror("Failed to open /proc/diskstats");
+        return;
+    }
+
+    char line[512];
+    while (fgets(line, sizeof(line), fp)) {
+        // Example line format (fields can vary slightly):
+        // 8       0 sda 157698 2233 5023234 107284 301968 253103 6087329 425688 0 190192 532552
+
+        if (strstr(line, "sda")) {  // only main disk
+            unsigned long rd_ios, rd_merges, rd_sectors, rd_ticks;
+            unsigned long wr_ios, wr_merges, wr_sectors, wr_ticks;
+            sscanf(line,
+                   "%*d %*d %*s %lu %lu %lu %lu %lu %lu %lu %lu",
+                   &rd_ios, &rd_merges, &rd_sectors, &rd_ticks,
+                   &wr_ios, &wr_merges, &wr_sectors, &wr_ticks);
+
+            disk->read_sectors = rd_sectors;
+            disk->write_sectors = wr_sectors;
+            disk->read_MB = rd_sectors * 512.0 / (1024.0 * 1024.0);  // 512 bytes/sector
+            disk->write_MB = wr_sectors * 512.0 / (1024.0 * 1024.0);
+            break;
+        }
+    }
+
+    fclose(fp);
+}
+
+void read_network_stats(network_stats* net) {
+    FILE* fp = fopen("/proc/net/dev", "r");
+    if (!fp) {
+        perror("Error opening /proc/net/dev");
+        return;
+    }
+
+    char line[1024];
+    int line_count = 0;
+    net->total_download_MB = 0;
+    net->total_upload_MB = 0;
+    
+
+    while (fgets(line, sizeof(line), fp)) {
+        line_count++;
+        if (line_count <= 2) continue; // Skip headers
+
+        char iface[64];
+        unsigned long r_bytes, t_bytes;
+        sscanf(line, "%63[^:]: %lu %*s %*s %*s %*s %*s %*s %*s %lu", iface, &r_bytes, &t_bytes);
+
+        // Skip loopback
+        if (strncmp(iface, "lo", 2) == 0) continue;
+
+        net->total_download_MB += r_bytes / (1024.0 * 1024.0);
+        net->total_upload_MB += t_bytes / (1024.0 * 1024.0);
+    }
+
+    fclose(fp);
+}
+int has_nvidia_gpu() {
+    FILE* fp = popen("nvidia-detector", "r");
+    if (!fp) return 0;
+
+    char buffer[64];
+    if (fgets(buffer, sizeof(buffer), fp) == NULL) {
+        pclose(fp);
+        return 0;
+    }
+
+    pclose(fp);
+    return (strncmp(buffer, "None", 4) != 0); // True if NOT "None"
+}
+void read_gpu_stats(gpu_stats* gpu) {
+    gpu->nvidia_gpu = has_nvidia_gpu();
+    gpu->gpu_MB = 0.0;
+    gpu->gpu_util_percent = 0.0;
+
+    if (!gpu->nvidia_gpu) {
+        return;  // Exit early if no NVIDIA GPU
+    }
+
+    FILE* fp = popen("nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv,noheader,nounits", "r");
+    if (!fp) {
+        perror("nvidia-smi failed");
+        gpu->nvidia_gpu = false;
+        return;
+    }
+
+    char buffer[128];
+    if (fgets(buffer, sizeof(buffer), fp)) {
+        float mem_used = 0.0, gpu_util = 0.0;
+        if (sscanf(buffer, "%f, %f", &mem_used, &gpu_util) == 2) {
+            gpu->nvidia_gpu = true;
+            gpu->gpu_MB = mem_used;
+            gpu->gpu_util_percent = gpu_util;
+        } else {
+            gpu->nvidia_gpu = false;  // parsing failed
+        }
+    } else {
+        gpu->nvidia_gpu = false;  // no output
+    }
+
+    pclose(fp);
 }

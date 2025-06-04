@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
+#include "memory_stats.h"
 
 
 typedef struct cpu_stats
@@ -21,6 +24,25 @@ typedef struct cpu_stats
     uint64_t guest;
     uint64_t guest_nice;
 } cpu_stats;
+
+typedef struct disk_stats {
+    uint64_t read_sectors;
+    uint64_t write_sectors;
+    float read_MB;
+    float write_MB;
+} disk_stats;
+
+typedef struct {
+    float total_download_MB;
+    float total_upload_MB;
+    //int max_speed_mbps; maybe later
+} network_stats;
+
+typedef struct gpu_stats{
+    bool nvidia_gpu;
+    float gpu_MB;
+    float gpu_util_percent;
+}gpu_stats;
 
 
 typedef struct general_stat { // create struct for storing process data
@@ -46,8 +68,14 @@ typedef struct general_stat { // create struct for storing process data
     float total_disk_read_MB;
     float avg_disk_read_MB;
     float avg_disk_write_MB; // last 100 frames
-    float network_upload;
-    float network_download;
+    float network_upload_speed;
+    float network_download_speed;
+    float network_avg_upload_speed;
+    float network_avg_download_speed;
+    memory_stats memory;
+    disk_stats disk;
+    network_stats net;
+    gpu_stats gpu;
 } general_stat;
     
 
@@ -55,5 +83,9 @@ void print_general_stat(general_stat *stat_container);
 void set_field_in_general_stat(general_stat* stat_container, int index, char* value);
 void split_general_stat_string(char* inp_string, general_stat* stat_pointer);
 char* read_general_stat(const char* path);
+void read_disk_stats(disk_stats* disk);
+void read_network_stats(network_stats* net);
+void read_gpu_stats(gpu_stats* gpu);
+int has_nvidia_gpu();
 
 #endif // GENERAL_STAT_QUERY_H

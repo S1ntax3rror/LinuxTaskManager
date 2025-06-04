@@ -121,7 +121,7 @@ void set_field_in_proc_stat(proc_stat* stat_container, int index, char* value){
 
 
 void split_PID_stat_string(char* inp_string, proc_stat* stat_pointer){    
-    proc_stat storage;
+    //proc_stat storage;
     char space = ' ';
     char bracket_open = '(';
     char bracket_close = ')';
@@ -165,7 +165,7 @@ void split_PID_stat_string(char* inp_string, proc_stat* stat_pointer){
 void read_stat(char* path, char* data_ptr, int size) {
     FILE *fp = fopen(path, "r"); // open file at path
     if (fp) { // if file exists, read data
-        fgets(data_ptr, size, fp);
+        //fgets(data_ptr, size, fp); auskommentiert unused
         fclose(fp);
     }
 }
