@@ -3,3 +3,6 @@
 c-core/process_monitor_query
 c-daemon/http_server
 *compile/*.lst
+.cached/clangd/index/*
+compile_commands.json
+.vscode/*
