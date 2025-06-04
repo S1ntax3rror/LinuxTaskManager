@@ -6,19 +6,21 @@
 #include "proc_stat.h"
 
 typedef struct trimmed_info {
-    int       pid;
-    char      comm[512];
-    char      state;
-    int       nice;            // <-- newly added
+    int pid;
+    char comm[512];
+    char state;
+    int nice;            // <-- newly added
 
-    double    cpu_percent;
-    double    ram_percent;
+    double cpu_percent;
+    double ram_percent;
 
-    uint64_t  timestamp_ms;
-    char      time_str[16];
+    uint64_t timestamp_ms;
+    char time_str[16];
 
-    double    avg_cpu_percent;
-    double    peak_ram_percent;
+    double avg_cpu_percent;
+    double peak_ram_percent;
+
+    int is_sleeper;
 } trimmed_info;
 
 /**
