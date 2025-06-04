@@ -58,7 +58,10 @@ int main() {
     printf("Free: %.2f MB\n", meminfo.mem_free_kb / 1024.0);
     printf("Available: %.2f MB\n", meminfo.mem_available_kb / 1024.0);
     printf("Buffers: %.2f MB\n", meminfo.buffers_kb / 1024.0);
-    printf("Cached: %.2f MB\n\n", meminfo.cached_kb / 1024.0);
+    printf("Cached: %.2f MB\n", meminfo.cached_kb / 1024.0);
+    printf("SwapTotal: %.2f MB\n", meminfo.swap_total_kb / 1024.0);
+    printf("SwapFree: %.2f MB\n", meminfo.swap_free_kb / 1024.0);
+    printf("SwapUsed: %.2f MB\n\n", meminfo.swap_used_kb / 1024.0);
     char* stat_data = read_general_stat("/proc/stat");
     general_stat general_stat_container;
     split_general_stat_string(stat_data, &general_stat_container);
@@ -84,7 +87,7 @@ int main() {
     
     proc_entry* processes = calloc(MAX_PROCS, sizeof(proc_entry));
     int proc_count = 0;
-    
+    exit(0);
     // init of before_info
     while ((entry = readdir(dp))) {
         if (is_number(entry->d_name)) {

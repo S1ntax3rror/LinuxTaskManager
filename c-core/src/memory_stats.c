@@ -21,6 +21,13 @@ void read_memory_stats(memory_stats* memstats) {
             sscanf(line + 8, "%lu", &memstats->buffers_kb);
         } else if (strncmp(line, "Cached:", 7) == 0) {
             sscanf(line + 7, "%lu", &memstats->cached_kb);
+        } else if (strncmp(line, "SwapTotal:", 10)==0) {
+            sscanf(line + 10, "%lu", &memstats->swap_total_kb);
+        } else if (strncmp(line, "SwapFree:", 9)==0) {
+            sscanf(line + 9, "%lu", &memstats->swap_free_kb);
+            if (memstats->swap_total_kb) {
+                memstats->swap_used_kb = memstats->swap_total_kb - memstats->swap_free_kb;
+            }
         }
     }
 
