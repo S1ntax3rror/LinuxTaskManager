@@ -60,7 +60,7 @@ int set_ram_limit(int pid, rlim_t bytes) {
 // wrapper around your /proc/stat parser:
 general_stat get_cpu_stats(void) {
     char *raw = read_general_stat("/proc/stat");
-    general_stat gs;
+    general_stat gs = {0};
     split_general_stat_string(raw, &gs);
     free(raw);
     return gs;
