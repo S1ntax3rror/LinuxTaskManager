@@ -1,8 +1,0 @@
-spring:
-  config:
-    activate:
-      on-profile: api
-
-external:
-  api:
-    url: http://localhost:9000/api

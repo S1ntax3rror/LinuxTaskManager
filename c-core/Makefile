@@ -12,7 +12,7 @@ all:
 	    src/memory_stats.c                  \
 	    src/trimmed_info.c                  \
 	    src/process_sort.c					\
-		src/header.c
+  		src/header.c
 
 debug:
 	gcc -g $(CFLAGS) -o process_monitor_query_debug \
