@@ -1,3 +1,4 @@
+#include <stdint.h>
 #define _GNU_SOURCE   // for prlimit(2)
 #include "../include/core_interface.h"
 #include <sys/resource.h>  // prlimit, setpriority
@@ -18,9 +19,13 @@
 #define MAX_PROCESS 2048
 int DOWN_TIME = 200000;
 struct timeval now;
+uint64_t now_time, before_time;
 
 proc_stat before_list[MAX_PROCESS]; 
 proc_stat now_list[MAX_PROCESS]; 
+int proc_count = 0;
+int counter = 0;
+
 /**
  * send_signal: wrapper around kill(2).
  */
@@ -61,19 +66,18 @@ general_stat get_cpu_stats(void) {
     return gs;
 }
 
-// simple snapshot of every process in /proc
 trimmed_info* get_process_list(int *out_count) {
     DIR *dp = opendir("/proc");
     if (!dp) {
         *out_count = 0;
         return NULL;
     }
-    int proc_count = 0;
     int cap = 64, cnt = 0;
     trimmed_info *arr = malloc(cap * sizeof(*arr));
     long page_size = sysconf(_SC_PAGESIZE);
     memory_stats mem; read_memory_stats(&mem);
-
+    counter++;
+    printf("counter: %i\n", counter);
     struct dirent *entry;
     
     while ((entry = readdir(dp))) {
@@ -92,17 +96,21 @@ trimmed_info* get_process_list(int *out_count) {
 
             proc_stat snapshot;
             split_PID_stat_string(file_data, &snapshot);
-            print_proc_stat(&snapshot);
             gettimeofday(&now, NULL);
             snapshot.timestamp_ms = (uint64_t)(now.tv_sec) * 1000 + (now.tv_usec / 1000);
-
             snapshot.ram_percent = (snapshot.rss * page_size * 100.0) / (mem.mem_total_kb * 1024.0);
             int proc_index = -1;
 
-            for (int i = 0; i < proc_count; i++) {
+            for (int i = 0; i < MAX_PROCESS; i++) {
                 if (before_list[i].pid == pid) {
                     now_list[i] = snapshot;
-                    calculate_normalized_cpu_usage(&before_list[i], &now_list[i], (double)DOWN_TIME / 1000000);
+                    uint64_t down_time;
+                    if (before_list[i].timestamp_ms > 0) {
+                        down_time = now_list[i].timestamp_ms - before_list[i].timestamp_ms;
+                    } else {
+                        down_time = 200;
+                    }
+                    calculate_normalized_cpu_usage(&before_list[i], &now_list[i], down_time);
                     proc_index = i;
                     break;
                 }
@@ -126,14 +134,13 @@ trimmed_info* get_process_list(int *out_count) {
             }
         }
         
+        memset(before_list, 0, sizeof(before_list));
+        
         for (int i=0; i<proc_count; i++) {
             before_list[i] = now_list[i];
         }
-
-        printf("comm 0: %s\n", before_list[0].comm);
         
         closedir(dp);
-        printf("num processes: %i\n", cnt);
         *out_count = cnt;
         return arr;
 }
