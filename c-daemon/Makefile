@@ -18,7 +18,8 @@ SRC := \
     $(CORE_SRCDIR)/utils.c                               \
     $(CORE_SRCDIR)/cpu_usage.c                           \
     $(CORE_SRCDIR)/process_sort.c                        \
-    $(CORE_SRCDIR)/core_interface.c
+    $(CORE_SRCDIR)/core_interface.c						 \
+    $(CORE_SRCDIR)/sleeper_detection.c
 
 OBJ := $(SRC:.c=.o)
 

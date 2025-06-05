@@ -94,7 +94,7 @@ trimmed_info* get_process_list(int *out_count) {
 
             read_stat(stat_path, file_data, sizeof(file_data));
 
-            proc_stat snapshot;
+            proc_stat snapshot = {0}; //Set all fields to 0
             split_PID_stat_string(file_data, &snapshot);
             gettimeofday(&now, NULL);
             snapshot.timestamp_ms = (uint64_t)(now.tv_sec) * 1000 + (now.tv_usec / 1000);

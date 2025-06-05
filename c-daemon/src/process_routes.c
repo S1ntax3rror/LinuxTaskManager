@@ -36,6 +36,7 @@ int handle_process_list(struct MHD_Connection *conn) {
         cJSON_AddNumberToObject(o, "cpuPercent", list[i].cpu_percent);
         cJSON_AddNumberToObject(o, "ramPercent", list[i].ram_percent);
         cJSON_AddNumberToObject(o, "nice",       list[i].nice);
+        cJSON_AddNumberToObject(o, "is_sleeper",       list[i].is_sleeper);
         cJSON_AddItemToArray(arr, o);
     }
     free(list);
