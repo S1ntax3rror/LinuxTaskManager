@@ -27,7 +27,6 @@ trimmed_info convert_to_trimmed_info(const proc_stat* proc) {
         time_t secs = proc->timestamp_ms / 1000;
         struct tm* tm_info = localtime(&secs);
         strftime(t.time_str, sizeof(t.time_str), "%H:%M:%S", tm_info);
-<<<<<<< HEAD
     }
 
     {
@@ -114,5 +113,5 @@ trimmed_info convert_to_trimmed_info(const proc_stat* proc) {
             t.up_time_seconds = 0.0;
         }
     }
-    return t;
+   return t;
 }
