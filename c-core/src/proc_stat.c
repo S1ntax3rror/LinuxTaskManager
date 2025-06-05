@@ -165,7 +165,7 @@ void split_PID_stat_string(char* inp_string, proc_stat* stat_pointer){
 void read_stat(char* path, char* data_ptr, int size) {
     FILE *fp = fopen(path, "r"); // open file at path
     if (fp) { // if file exists, read data
-        //fgets(data_ptr, size, fp); auskommentiert unused
+        fgets(data_ptr, size, fp);
         fclose(fp);
     }
 }
