@@ -15,6 +15,6 @@ typedef struct {
 extern ProcessInfo *process_map;
 
 // Updates or adds process info and detects sleepers
-int update_sleeper_process(pid_t pid, long current_cpu_time);
+int update_sleeper_process(pid_t pid, long current_cpu_time, double memory_percent);
 
 #endif // PROCESS_TRACKER_H

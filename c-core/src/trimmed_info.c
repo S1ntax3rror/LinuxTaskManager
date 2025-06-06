@@ -113,6 +113,13 @@ trimmed_info convert_to_trimmed_info(const proc_stat* proc) {
             t.up_time_seconds = 0.0;
         }
     }
+    
+    long activetime = proc->utime + proc->stime;
+    if (update_sleeper_process(t.pid, activetime, t.ram_percent) == 1 && t.cmd[0] != '\0') {
+        t.is_sleeper = 1;
+    } else {
+        t.is_sleeper = 0;
+    }
 
     return t;
 }
