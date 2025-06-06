@@ -102,6 +102,75 @@ static int handle_disk_stats(struct MHD_Connection *conn) {
     return ret;
 }
 
+static int handle_general_stats(struct MHD_Connection *conn) {
+    // 1) Fetch a fresh general_stat snapshot. This populates:
+    //      gs.total_cpu_utilization_percent
+    //      gs.memory.mem_total_kb, mem_free_kb, mem_available_kb, buffers_kb, cached_kb, swap_total_kb, swap_free_kb
+    general_stat gs = get_cpu_stats();
+
+    // 2) Read /proc/loadavg to get load averages and task counts
+    double la1 = 0.0, la5 = 0.0, la15 = 0.0;
+    int running_tasks = 0, total_tasks = 0;
+    FILE *lf = fopen("/proc/loadavg", "r");
+    if (lf) {
+        // Format: “%lf %lf %lf %d/%d %*d\n”
+        fscanf(lf,
+               "%lf %lf %lf %d/%d %*d",
+               &la1, &la5, &la15,
+               &running_tasks, &total_tasks);
+        fclose(lf);
+    }
+    // If fopen() fails, the load averages stay at 0.0 and task counts at 0.
+
+    // 3) Build the JSON object
+    cJSON *root = cJSON_CreateObject();
+
+    // Top‐level load‐average & task fields
+    cJSON_AddNumberToObject(root, "loadavg1",      la1);
+    cJSON_AddNumberToObject(root, "loadavg5",      la5);
+    cJSON_AddNumberToObject(root, "loadavg15",     la15);
+    cJSON_AddNumberToObject(root, "tasks_total",   total_tasks);
+    cJSON_AddNumberToObject(root, "tasks_running", running_tasks);
+
+    // Add aggregate CPU utilization (%)
+    cJSON_AddNumberToObject(root,
+                            "cpu_util_percent",
+                            gs.total_cpu_utilization_percent);
+
+    // Nested “memory” object
+    cJSON *mem = cJSON_CreateObject();
+    cJSON_AddNumberToObject(mem, "total_MB",      gs.memory.mem_total_kb     / 1024.0);
+    cJSON_AddNumberToObject(mem, "free_MB",       gs.memory.mem_free_kb      / 1024.0);
+    cJSON_AddNumberToObject(mem, "available_MB",  gs.memory.mem_available_kb / 1024.0);
+    cJSON_AddNumberToObject(mem, "buffers_MB",    gs.memory.buffers_kb       / 1024.0);
+    cJSON_AddNumberToObject(mem, "cached_MB",     gs.memory.cached_kb        / 1024.0);
+    cJSON_AddNumberToObject(mem, "swap_total_MB", gs.memory.swap_total_kb    / 1024.0);
+    cJSON_AddNumberToObject(mem, "swap_free_MB",  gs.memory.swap_free_kb     / 1024.0);
+
+    cJSON_AddItemToObject(root, "memory", mem);
+
+    // 4) Serialize JSON to string, delete the cJSON tree
+    char *json_str = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+
+    // 5) Package into an MHD response, add headers (including CORS), and queue it
+    struct MHD_Response *resp = MHD_create_response_from_buffer(
+        strlen(json_str),
+        (void *)json_str,
+        MHD_RESPMEM_MUST_FREE);
+
+    // Always send Content-Type: application/json
+    MHD_add_response_header(resp, "Content-Type", "application/json");
+
+    // Add CORS header so that front‐end (on port 8080) can fetch from port 9000
+    MHD_add_response_header(resp, "Access-Control-Allow-Origin", "*");
+
+    int ret = MHD_queue_response(conn, MHD_HTTP_OK, resp);
+    MHD_destroy_response(resp);
+    return ret;
+}
+
+
 
 
 int dispatch_stats_routes(struct MHD_Connection *conn,
@@ -116,8 +185,12 @@ int dispatch_stats_routes(struct MHD_Connection *conn,
         return handle_network_stats(conn);
     }
      // NEW: GET /api/stats/disk 
-     if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/disk")) {
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/disk")) {
         return handle_disk_stats(conn);
+    }
+    // NEW: /api/stats/general
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/general")) {
+        return handle_general_stats(conn);
     }
     
     return 0;

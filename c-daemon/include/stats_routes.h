@@ -4,6 +4,8 @@
 #include <microhttpd.h>
 
 static int handle_disk_stats(struct MHD_Connection *conn);
+static int handle_network_stats(struct MHD_Connection *conn);
+static int handle_cpu_stats(struct MHD_Connection *conn);
 
 /* Dispatches CPU‐stats endpoint.
  * Returns 1 if it handled the request, 0 otherwise. */
