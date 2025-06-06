@@ -10,4 +10,11 @@ public class ViewController {
     public String index() {
         return "index";
     }
+
+    @GetMapping("/history")
+    public String history() {
+        return "history";
+    }
+
+
 }

@@ -86,16 +86,19 @@ int handle_signal(struct MHD_Connection *conn, int pid, const char *body) {
     if (!cmd) {
         fprintf(stderr, "[process_routes] missing cmd field\n");
         const char *response_str = "Bad Request";
+
         struct MHD_Response *resp = MHD_create_response_from_buffer(
             strlen(response_str),
             (void *)response_str,
-            MHD_RESPMEM_PERSISTENT
-        );
-        MHD_add_response_header(resp, "Connection", "close");
-        int ret = MHD_queue_response(conn, MHD_HTTP_BAD_REQUEST, resp);
-        MHD_destroy_response(resp);
-        return ret;
-    }
+             MHD_RESPMEM_MUST_FREE);
+
+    MHD_add_response_header(resp, "Content-Type", "application/json");
+    MHD_add_response_header(resp, "Access-Control-Allow-Origin", "*");
+
+    int ret = MHD_queue_response(conn, MHD_HTTP_OK, resp);
+    MHD_destroy_response(resp);
+    return ret;
+}
 
     int signo = -1;
     if (!strcasecmp(cmd, "KILL")   || !strcasecmp(cmd, "SIGKILL")) {
