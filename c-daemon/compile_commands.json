@@ -1,0 +1,20 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-D_GNU_SOURCE",
+      "-D_DEFAULT_SOURCE",
+      "-Iinclude",
+      "-I../c-core/include",
+      "-Wall",
+      "-O2",
+      "-c",
+      "-o",
+      "../c-core/src/trimmed_info.o",
+      "../c-core/src/trimmed_info.c"
+    ],
+    "directory": "/home/jiri/Documents/Projects/OS/LinuxTaskManager/c-daemon",
+    "file": "/home/jiri/Documents/Projects/OS/LinuxTaskManager/c-core/src/trimmed_info.c",
+    "output": "/home/jiri/Documents/Projects/OS/LinuxTaskManager/c-core/src/trimmed_info.o"
+  }
+]

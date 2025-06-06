@@ -68,6 +68,7 @@ int handle_process_list(struct MHD_Connection *conn) {
         cJSON_AddNumberToObject(o, "upTime", list[i].up_time_seconds);
 
         // Append this object to the array
+        cJSON_AddNumberToObject(o, "is_sleeper",       list[i].is_sleeper);
         cJSON_AddItemToArray(arr, o);
     }
 

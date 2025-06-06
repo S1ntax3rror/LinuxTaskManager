@@ -28,6 +28,9 @@ typedef struct trimmed_info {
 
     double    avg_cpu_percent;
     double    peak_ram_percent;
+
+    char      cmd[500];
+    int       is_sleeper;
 } trimmed_info;
 
 /**

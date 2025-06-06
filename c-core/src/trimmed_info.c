@@ -1,6 +1,6 @@
 #define _DEFAULT_SOURCE   // for getpwuid, sysconf, etc.
 
-#include "../include/trimmed_info.h"
+#include "../include/../include/trimmed_info.h"
 #include <string.h>
 #include <time.h>
 #include <sys/types.h>
@@ -10,17 +10,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../include/sleeper_detection.h"
 
 trimmed_info convert_to_trimmed_info(const proc_stat* proc) {
     trimmed_info t = {0};
 
-    t.pid         = proc->pid;
-    strncpy(t.comm, proc->comm, sizeof(t.comm) - 1);
-    t.comm[sizeof(t.comm) - 1] = '\0';
-    t.state       = proc->state;
-    t.nice        = proc->nice;            // kernel “nice” value
+    t.pid = proc->pid;
+    strncpy(t.comm, proc->comm, sizeof(t.comm));
+    t.comm[sizeof(t.comm) - 1] = '\0'; // ensure null-termination
+    t.state = proc->state;
+    t.nice = proc->nice;         // <-- grab the kernel “nice” value
+
     t.cpu_percent = proc->cpu_percent;
+    t.peak_ram_percent = 0;
     t.ram_percent = proc->ram_percent;
+    if (t.ram_percent > t.peak_ram_percent){
+        t.peak_ram_percent = t.ram_percent;
+    }
 
     t.timestamp_ms = proc->timestamp_ms;
     {

@@ -121,7 +121,7 @@ void set_field_in_proc_stat(proc_stat* stat_container, int index, char* value){
 
 
 void split_PID_stat_string(char* inp_string, proc_stat* stat_pointer){    
-    proc_stat storage;
+    //proc_stat storage;
     char space = ' ';
     char bracket_open = '(';
     char bracket_close = ')';
