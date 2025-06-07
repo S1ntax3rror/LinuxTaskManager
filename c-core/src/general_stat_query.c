@@ -151,7 +151,7 @@ void split_general_stat_string(char* inp_string, general_stat* stat_pointer){
                 first_word[w_count] = '\0';
 
                 if (strcmp(firstThree, "cpu") == 0 || strcmp(firstThree, "cpu ") == 0){
-                    cpu_stats cpu_stats_container;
+                    cpu_stats cpu_stats_container = {0};
                     set_cpu(line, &cpu_stats_container);
 
                     if (line[3] == ' '){ // if the fourth char is a space, its the general stats line

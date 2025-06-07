@@ -5,6 +5,7 @@
 
 /* Return 200+JSON list of processes */
 int  handle_process_list(struct MHD_Connection *conn);
+int  handle_cores_and_memory(struct MHD_Connection *conn);
 
 /* POST /api/processes/{pid}/signal
  * body: {"cmd":"KILL"} or {"cmd":"TERM"} or {"cmd":"9"}

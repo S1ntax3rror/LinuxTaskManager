@@ -3,7 +3,8 @@
 #include "../include/process_routes.h"
 #include "../../c-core/include/core_interface.h"
 #include "../include/server.h"
-
+#include "../../c-core/include/general_stat_query.h"
+#include "memory_stats.h"
 #include <cjson/cJSON.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,6 +76,36 @@ int handle_process_list(struct MHD_Connection *conn) {
     free(list);
     return send_json_response(conn, arr);
 }
+
+/**
+ * Handle GET /api/processes
+ * Return a JSON array of all processes (trimmed_info).
+ */
+int handle_cores_and_memory(struct MHD_Connection *conn) {
+    general_stat list = get_cpu_stats();
+    memory_stats memory = list.memory; 
+    cJSON *o = cJSON_CreateObject();
+    cJSON *core_percent = cJSON_CreateObject();
+    cJSON *memory_stats = cJSON_CreateObject();
+
+    for (int i=0; i<list.num_cpus; i++) {
+        char key[16];
+        snprintf(key, sizeof(key), "cpu%d", i);
+        cJSON_AddNumberToObject(core_percent, key, list.cores[i].core_percent);
+    }
+    cJSON_AddItemToObject(o, "core_percent", core_percent);
+    cJSON_AddNumberToObject(memory_stats, "total_kb", memory.mem_total_kb);
+    int used_mem = memory.mem_total_kb - memory.mem_available_kb;
+    cJSON_AddNumberToObject(memory_stats, "used_kb", used_mem);
+    cJSON_AddNumberToObject(memory_stats, "free_kb", memory.mem_free_kb);
+    cJSON_AddNumberToObject(memory_stats, "cached_kb", memory.cached_kb);
+    cJSON_AddNumberToObject(memory_stats, "buffered_kb", memory.buffers_kb);
+    cJSON_AddItemToObject(o, "memory_stats", memory_stats);
+
+    return send_json_response(conn, o);
+}
+
+
 
 /**
  * Handle POST /api/processes/{pid}/signal
