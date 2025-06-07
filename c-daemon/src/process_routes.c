@@ -87,13 +87,15 @@ int handle_cores_and_memory(struct MHD_Connection *conn) {
     cJSON *o = cJSON_CreateObject();
     cJSON *core_percent = cJSON_CreateObject();
     cJSON *memory_stats = cJSON_CreateObject();
-
+    cJSON *swap_stats = cJSON_CreateObject();
+    
     for (int i=0; i<list.num_cpus; i++) {
         char key[16];
         snprintf(key, sizeof(key), "cpu%d", i);
         cJSON_AddNumberToObject(core_percent, key, list.cores[i].core_percent);
     }
     cJSON_AddItemToObject(o, "core_percent", core_percent);
+   
     cJSON_AddNumberToObject(memory_stats, "total_kb", memory.mem_total_kb);
     int used_mem = memory.mem_total_kb - memory.mem_available_kb;
     cJSON_AddNumberToObject(memory_stats, "used_kb", used_mem);
@@ -101,7 +103,11 @@ int handle_cores_and_memory(struct MHD_Connection *conn) {
     cJSON_AddNumberToObject(memory_stats, "cached_kb", memory.cached_kb);
     cJSON_AddNumberToObject(memory_stats, "buffered_kb", memory.buffers_kb);
     cJSON_AddItemToObject(o, "memory_stats", memory_stats);
-
+    
+    cJSON_AddNumberToObject(swap_stats, "total_kb", memory.swap_total_kb);
+    cJSON_AddNumberToObject(swap_stats, "used_kb", memory.swap_used_kb);
+    cJSON_AddNumberToObject(swap_stats, "free_kb", memory.swap_free_kb);
+    cJSON_AddItemToObject(o, "swap_stats", swap_stats);
     return send_json_response(conn, o);
 }
 
