@@ -1,36 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>History & General Stats</title>
+  <title>History &amp; General Stats</title>
+
+  <!-- Favicon (make sure this file lives in your static/public folder) -->
   <link rel="icon" href="ltm_icon.ico" type="image/x-icon" />
 
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-        rel="stylesheet" />
+  <!-- Bootstrap CSS for cards, spacing, typography, etc. -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
 
-  <!-- Chart.js (from CDN) -->
+  <!-- Chart.js (must load before our history.js) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- Custom CSS (your normal /css/style.css) -->
+  <!-- Your own custom CSS (if any) -->
   <link href="/css/style.css" rel="stylesheet" />
 </head>
+
 <body class="bg-light">
   <div class="container py-5">
-    <!-- Page header -->
+    <!-- ─── Page Header ─────────────────────────────────────────────────────── -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2>History &amp; General Stats</h2>
       <a href="/" class="btn btn-outline-secondary">&larr; Back to Dashboard</a>
     </div>
 
-    <!-- Last‐updated timestamp -->
-    <div class="mb-2">
-      <small id="last-updated" class="text-muted">
+    <!-- ─── Last‐Updated Timestamp ───────────────────────────────────────────── -->
+    <div class="mb-3">
+      <small class="text-muted">
         Last updated: <span id="timestamp">--:--:--</span>
       </small>
     </div>
 
-    <!-- ─── Network Speed Card ──────────────────────────────────────────────── -->
+    <!-- ─── General System Stats ────────────────────────────────────────────── -->
+    <div class="mb-4">
+      <!-- Load Averages -->
+      <div class="mb-2">
+        <strong>Load Avg (1m, 5m, 15m):</strong>
+        <span id="loadAvg">- , - , -</span>
+      </div>
+
+      <!-- CPU Utilization -->
+      <div class="mb-2">
+        <strong>CPU Util:</strong>
+        <span id="cpuUtil">- %</span>
+      </div>
+
+      <!-- Tasks -->
+      <div class="mb-2">
+        <strong>Tasks:</strong>
+        <span id="tasksInfo">total=-, running=-</span>
+      </div>
+
+      <!-- Memory -->
+      <div class="mb-2">
+        <strong>Memory (MB):</strong>
+        <span id="memoryInfo">total=- MB, free=- MB, avail=- MB</span>
+      </div>
+
+      <!-- Buffers + Cached -->
+      <div class="mb-2">
+        <strong>Buffers + Cached:</strong>
+        <span id="buffersInfo">buffers=- MB, cached=- MB</span>
+      </div>
+
+      <!-- Swap -->
+      <div class="mb-2">
+        <strong>Swap (MB):</strong>
+        <span id="swapInfo">total=- MB, free=- MB</span>
+      </div>
+    </div>
+
+    <!-- ─── Network Speed Chart Card ────────────────────────────────────────── -->
     <div class="card shadow-sm mb-4">
       <div class="card-header">
         <strong>Network Speed (MB/s)</strong>
@@ -40,24 +84,23 @@
       </div>
     </div>
 
-    <!-- ─── NEW: Disk I/O Speed Card ─────────────────────────────────────────── -->
+    <!-- ─── Disk I/O Speed Chart Card ──────────────────────────────────────── -->
     <div class="card shadow-sm mb-4">
       <div class="card-header">
         <strong>Disk I/O Speed (MB/s)</strong>
       </div>
       <div class="card-body">
-        <!-- height=200px, just like Network chart -->
         <canvas id="diskChart" height="200"></canvas>
       </div>
     </div>
 
-    <!-- (Later you can add more cards: CPU, Memory, etc.) -->
+    <!-- (You can add more cards here later, e.g. per‐core CPU, etc.) -->
+  </div> <!-- /.container -->
 
-  </div>
-
-  <!-- Bootstrap JS bundle (optional) -->
+  <!-- Bootstrap JS bundle (optional, for dropdowns, etc.) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- History polling + chart setup -->
+
+  <!-- Our polling + chart‐setup script -->
   <script src="/js/history.js"></script>
 </body>
 </html>

@@ -1,259 +1,250 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// js/history.js
-// Poll both /api/stats/network and /api/stats/disk every second,
-// compute instantaneous MB/s, keep a 60-second rolling window.
-// Place this file in your web-root:  /static/js/history.js
-// Make sure <script src="/js/history.js"></script> is on the /history page.
-// ─────────────────────────────────────────────────────────────────────────────
+// File: /js/history.js
+// ------------------------------------------------------
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
+  //
+  // ─── 1) DOM ELEMENT REFERENCES ───────────────────────────────────────────
+  //
+  const timestampEl    = document.getElementById('timestamp');
+  const loadAvgEl      = document.getElementById('loadAvg');
+  const cpuUtilEl      = document.getElementById('cpuUtil');
+  const tasksInfoEl    = document.getElementById('tasksInfo');
+  const memoryInfoEl   = document.getElementById('memoryInfo');
+  const buffersInfoEl  = document.getElementById('buffersInfo');
+  const swapInfoEl     = document.getElementById('swapInfo');
 
-  // ─── Global constants ───────────────────────────────────────────────────────
-  const API_BASE   = "http://localhost:9000/api/stats";   // C-daemon endpoint
-  const POLL_MS    = 1000;    // 1 second polling interval
-  const MAX_POINTS = 60;      // 60 seconds window
+  //
+  // ─── 2) SET UP THE NETWORK CHART (60‐POINT WINDOW) ────────────────────────
+  //
+  const netCtx = document.getElementById('networkChart').getContext('2d');
+  // Pre‐fill arrays with 60 zeros
+  let netDownload = Array(60).fill(0);
+  let netUpload   = Array(60).fill(0);
 
-  // ─── Helper: Format the current time as "HH:mm:ss" ───────────────────────────
-  function nowHHMMSS() {
-    const d = new Date();
-    const pad = (n) => (n < 10 ? "0" + n : "" + n);
-    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  }
+  // X‐axis labels: [1, 2, 3, …, 60]
+  const labels = Array.from({ length: 60 }, (_, i) => i + 1);
 
-  // ─── 1) LAST‐UPDATED TIMESTAMP ELEMENT ───────────────────────────────────────
-  const lastUpdatedEl = document.getElementById("timestamp");
-  function updateTimestamp() {
-    lastUpdatedEl.textContent = nowHHMMSS();
-  }
-
-
-  // ─── 2) NETWORK CHART SETUP ───────────────────────────────────────────────────
-  const networkCtx = document.getElementById("networkChart").getContext("2d");
-  const networkChart = new Chart(networkCtx, {
-    type: "line",
+  const netChart = new Chart(netCtx, {
+    type: 'line',
     data: {
-      labels: [],  // X labels: 0,1,2,…59
+      labels: labels,
       datasets: [
         {
-          label: "Download (MB/s)",
-          data: [],
-          borderColor: "rgba(0, 123, 255, 1)",
-          backgroundColor: "rgba(0, 123, 255, 0.1)",
+          label: 'Download (MB/s)',
+          data: netDownload,
+          borderColor: 'rgba(54, 162, 235, 1)',       // blue line
+          backgroundColor: 'rgba(54, 162, 235, 0.1)', // light‐blue fill
           fill: true,
           tension: 0.2,
-          pointRadius: 2,
         },
         {
-          label: "Upload (MB/s)",
-          data: [],
-          borderColor: "rgba(40, 167, 69, 1)",
-          backgroundColor: "rgba(40, 167, 69, 0.1)",
+          label: 'Upload (MB/s)',
+          data: netUpload,
+          borderColor: 'rgba(75, 192, 192, 1)',       // green line
+          backgroundColor: 'rgba(75, 192, 192, 0.1)',  // light‐green fill
           fill: true,
           tension: 0.2,
-          pointRadius: 2,
         },
       ],
     },
     options: {
-      animation: false,
       responsive: true,
       maintainAspectRatio: false,
       scales: {
         x: {
-          title: { display: true, text: "Elapsed (s)" },
-          ticks: {
-            // Show ticks every 5 seconds (optional)
-            callback: (val, idx) => (idx % 5 === 0 ? val : ""),
-          },
+          title: { display: true, text: 'Elapsed (s)' },
+          ticks: { autoSkip: true, maxTicksLimit: 12 },
         },
         y: {
-          title: { display: true, text: "MB/s" },
+          title: { display: true, text: 'MB/s' },
           beginAtZero: true,
         },
       },
       plugins: {
-        legend: { position: "top", labels: { boxWidth: 12 } }
+        legend: { position: 'top' },
       },
     },
   });
 
-  // Keep track of previous cumulative values for network:
-  let prevNetDownload = null;
-  let prevNetUpload   = null;
+  // We'll store the *previous* total_download_MB / total_upload_MB
+  let lastNetTotals = { download: null, upload: null };
 
+  //
+  // ─── 3) SET UP THE DISK CHART (60‐POINT WINDOW) ───────────────────────────
+  //
+  const diskCtx = document.getElementById('diskChart').getContext('2d');
+  let diskRead  = Array(60).fill(0);
+  let diskWrite = Array(60).fill(0);
 
-  // ─── 3) DISK CHART SETUP ──────────────────────────────────────────────────────
-  const diskCtx = document.getElementById("diskChart").getContext("2d");
   const diskChart = new Chart(diskCtx, {
-    type: "line",
+    type: 'line',
     data: {
-      labels: [],  // 0…59
+      labels: labels,
       datasets: [
         {
-          label: "Read (MB/s)",
-          data: [],
-          borderColor: "rgba(255, 193, 7, 1)",      // amber
-          backgroundColor: "rgba(255, 193, 7, 0.1)",
+          label: 'Read (MB/s)',
+          data: diskRead,
+          borderColor: 'rgba(255, 99, 132, 1)',       // red line
+          backgroundColor: 'rgba(255, 99, 132, 0.1)',  // light‐red fill
           fill: true,
           tension: 0.2,
-          pointRadius: 2,
         },
         {
-          label: "Write (MB/s)",
-          data: [],
-          borderColor: "rgba(220, 53, 69, 1)",       // red
-          backgroundColor: "rgba(220, 53, 69, 0.1)",
+          label: 'Write (MB/s)',
+          data: diskWrite,
+          borderColor: 'rgba(255, 206, 86, 1)',       // orange line
+          backgroundColor: 'rgba(255, 206, 86, 0.1)',  // light‐orange fill
           fill: true,
           tension: 0.2,
-          pointRadius: 2,
         },
       ],
     },
     options: {
-      animation: false,
       responsive: true,
       maintainAspectRatio: false,
       scales: {
         x: {
-          title: { display: true, text: "Elapsed (s)" },
-          ticks: {
-            callback: (val, idx) => (idx % 5 === 0 ? val : ""),
-          },
+          title: { display: true, text: 'Elapsed (s)' },
+          ticks: { autoSkip: true, maxTicksLimit: 12 },
         },
         y: {
-          title: { display: true, text: "MB/s" },
+          title: { display: true, text: 'MB/s' },
           beginAtZero: true,
         },
       },
       plugins: {
-        legend: { position: "top", labels: { boxWidth: 12 } }
+        legend: { position: 'top' },
       },
     },
   });
 
-  // Keep track of previous cumulative values for disk:
-  let prevDiskRead  = null;
-  let prevDiskWrite = null;
+  // We'll store the *previous* total_read_MB / total_write_MB
+  let lastDiskTotals = { read: null, write: null };
 
-
-  // ─── 4) POLLING FUNCTION ─────────────────────────────────────────────────────
-  async function pollAll() {
-    updateTimestamp();
-
-    // ── 4a) Fetch Network stats ─────────────────────────────────────────────────
+  //
+  // ─── 4) POLLING FUNCTIONS ─────────────────────────────────────────────────
+  //
+  // (a) Poll General Stats
+  async function updateGeneralStats() {
     try {
-      const netResp = await fetch(`${API_BASE}/network`);
-      if (netResp.ok) {
-        const netJson = await netResp.json();
-        const curDownload = netJson.total_download_MB;
-        const curUpload   = netJson.total_upload_MB;
+      const res = await fetch('http://localhost:9000/api/stats/general');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
 
-        let downloadSpeed = 0;
-        let uploadSpeed   = 0;
-        if (prevNetDownload !== null && prevNetUpload !== null) {
-          downloadSpeed = (curDownload - prevNetDownload); // MB over 1 second
-          uploadSpeed   = (curUpload   - prevNetUpload);
-          // (Our poll interval is exactly 1 second, so ΔMB = MB/s)
-        }
+      // 1) Update “Last updated” clock
+      const now = new Date();
+      timestampEl.textContent = now.toLocaleTimeString();
 
-        prevNetDownload = curDownload;
-        prevNetUpload   = curUpload;
+      // 2) Load Averages (1m, 5m, 15m)
+      loadAvgEl.textContent = `${data.loadavg1.toFixed(2)}, ${data.loadavg5.toFixed(2)}, ${data.loadavg15.toFixed(2)}`;
 
-        // X‐axis label = “seconds since we started collecting”:
-        const nextIndex = networkChart.data.labels.length;
-        networkChart.data.labels.push(nextIndex);               // 0,1,2,…,60,…
+      // 3) CPU Util %
+      cpuUtilEl.textContent = `${data.cpu_util_percent.toFixed(1)}%`;
 
-        networkChart.data.datasets[0].data.push(downloadSpeed);
-        networkChart.data.datasets[1].data.push(uploadSpeed);
+      // 4) Tasks: total/running
+      tasksInfoEl.textContent = `total=${data.tasks_total}, running=${data.tasks_running}`;
 
-        // If we exceed MAX_POINTS, drop the oldest value:
-        if (networkChart.data.labels.length > MAX_POINTS) {
-          networkChart.data.labels.shift();
-          networkChart.data.datasets.forEach(ds => ds.data.shift());
-        }
-        networkChart.update("none");
-      } else {
-        console.error("Failed to fetch /api/stats/network:", netResp.status);
-      }
+      // 5) Memory (MB)
+      memoryInfoEl.textContent =
+        `total=${data.memory.total_MB.toFixed(0)} MB, ` +
+        `free=${data.memory.free_MB.toFixed(0)} MB, ` +
+        `avail=${data.memory.available_MB.toFixed(0)} MB`;
+
+      // 6) Buffers + Cached (MB)
+      buffersInfoEl.textContent =
+        `buffers=${data.memory.buffers_MB.toFixed(0)} MB, ` +
+        `cached=${data.memory.cached_MB.toFixed(0)} MB`;
+
+      // 7) Swap (MB)
+      swapInfoEl.textContent =
+        `total=${data.memory.swap_total_MB.toFixed(0)} MB, ` +
+        `free=${data.memory.swap_free_MB.toFixed(0)} MB`;
+
     } catch (err) {
-      console.error("Error fetching network stats:", err);
+      console.error('Error fetching general stats:', err);
     }
-
-    // ── 4b) Fetch Disk stats ────────────────────────────────────────────────────
-    try {
-      const diskResp = await fetch(`${API_BASE}/disk`);
-      if (diskResp.ok) {
-        const diskJson = await diskResp.json();
-        const curRead  = diskJson.total_read_MB;
-        const curWrite = diskJson.total_write_MB;
-
-        let readSpeed  = 0;
-        let writeSpeed = 0;
-        if (prevDiskRead !== null && prevDiskWrite !== null) {
-          readSpeed  = (curRead  - prevDiskRead);
-          writeSpeed = (curWrite - prevDiskWrite);
-        }
-
-        prevDiskRead  = curRead;
-        prevDiskWrite = curWrite;
-
-        const nextIndex2 = diskChart.data.labels.length;
-        diskChart.data.labels.push(nextIndex2);
-        diskChart.data.datasets[0].data.push(readSpeed);
-        diskChart.data.datasets[1].data.push(writeSpeed);
-
-        if (diskChart.data.labels.length > MAX_POINTS) {
-          diskChart.data.labels.shift();
-          diskChart.data.datasets.forEach(ds => ds.data.shift());
-        }
-        diskChart.update("none");
-      } else {
-        console.error("Failed to fetch /api/stats/disk:", diskResp.status);
-      }
-    } catch (err) {
-      console.error("Error fetching disk stats:", err);
-    }
-
-    // Schedule next tick in 1 second:
-    setTimeout(pollAll, POLL_MS);
   }
 
-
-  // ─── 5) INITIALIZE & START ───────────────────────────────────────────────────
-  // We want the first “point” at time = 0 (speed = 0), so:
-  for (let i = 0; i < MAX_POINTS; i++) {
-    networkChart.data.labels.push(i);
-    networkChart.data.datasets.forEach(ds => ds.data.push(0));
-    diskChart.data.labels.push(i);
-    diskChart.data.datasets.forEach(ds => ds.data.push(0));
-  }
-  networkChart.update("none");
-  diskChart.update("none");
-
-  // Initialize “previous” values by fetching one snapshot from the server,
-  // so that on the *next* tick we can compute a Δ.
-  (async () => {
+  // (b) Poll Network Stats → compute “MB/s” deltas
+  async function updateNetworkStats() {
     try {
-      // Fetch network once:
-      const netResp = await fetch(`${API_BASE}/network`);
-      if (netResp.ok) {
-        const netJson = await netResp.json();
-        prevNetDownload = netJson.total_download_MB;
-        prevNetUpload   = netJson.total_upload_MB;
-      }
-      // Fetch disk once:
-      const diskResp = await fetch(`${API_BASE}/disk`);
-      if (diskResp.ok) {
-        const diskJson = await diskResp.json();
-        prevDiskRead  = diskJson.total_read_MB;
-        prevDiskWrite = diskJson.total_write_MB;
+      const res = await fetch('http://localhost:9000/api/stats/network');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const totDown = data.total_download_MB;
+      const totUp   = data.total_upload_MB;
+
+      // If we have a “previous” snapshot, compute delta
+      if (lastNetTotals.download !== null) {
+        const deltaDown = totDown - lastNetTotals.download;
+        const deltaUp   = totUp   - lastNetTotals.upload;
+
+        // Push into rolling arrays, drop oldest sample
+        netDownload.shift();
+        netDownload.push(deltaDown);
+
+        netUpload.shift();
+        netUpload.push(deltaUp);
+
+        // Tell Chart.js to use the new data
+        netChart.data.datasets[0].data = netDownload;
+        netChart.data.datasets[1].data = netUpload;
+        netChart.update();
       }
 
-      // Now that we have “previous,” start the continuous polling loop:
-      pollAll();
+      // Save this cycle as “last”
+      lastNetTotals.download = totDown;
+      lastNetTotals.upload   = totUp;
+
     } catch (err) {
-      console.error("Error during initial fetch:", err);
+      console.error('Error fetching network stats:', err);
     }
-  })();
+  }
 
+  // (c) Poll Disk Stats → compute “MB/s” deltas
+  async function updateDiskStats() {
+    try {
+      const res = await fetch('http://localhost:9000/api/stats/disk');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const totRead  = data.total_read_MB;
+      const totWrite = data.total_write_MB;
+
+      if (lastDiskTotals.read !== null) {
+        const deltaRead  = totRead  - lastDiskTotals.read;
+        const deltaWrite = totWrite - lastDiskTotals.write;
+
+        diskRead.shift();
+        diskRead.push(deltaRead);
+
+        diskWrite.shift();
+        diskWrite.push(deltaWrite);
+
+        diskChart.data.datasets[0].data = diskRead;
+        diskChart.data.datasets[1].data = diskWrite;
+        diskChart.update();
+      }
+
+      lastDiskTotals.read  = totRead;
+      lastDiskTotals.write = totWrite;
+
+    } catch (err) {
+      console.error('Error fetching disk stats:', err);
+    }
+  }
+
+  //
+  // ─── 5) INITIALIZE “LAST” VALUES, THEN START INTERVALS ───────────────────
+  //
+  // Do one initial fetch so that lastNetTotals / lastDiskTotals are set
+  updateGeneralStats();
+  updateNetworkStats();
+  updateDiskStats();
+
+  // Then repeat every 1 second
+  setInterval(updateGeneralStats, 1000);
+  setInterval(updateNetworkStats, 1000);
+  setInterval(updateDiskStats, 1000);
 });
