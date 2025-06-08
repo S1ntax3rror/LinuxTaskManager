@@ -1,199 +1,118 @@
 #include "../include/stats_routes.h"
 #include "../../c-core/include/core_interface.h"
 #include "../include/server.h"
-#include <string.h>
 #include <cjson/cJSON.h>
 #include <sys/time.h>
 #include <stdint.h>
+#include <string.h>
 
-
-
+/* GET /api/stats/cpu → basic cpu/interrupt/etc stats */
 static int handle_cpu_stats(struct MHD_Connection *conn) {
     general_stat gs = get_cpu_stats();
-
     cJSON *root = cJSON_CreateObject();
     cJSON *cpu  = cJSON_CreateObject();
-
-    cJSON_AddStringToObject(cpu,  "name",       gs.cpu.name);
-    cJSON_AddNumberToObject(cpu,  "nice",       gs.cpu.nice);
-    cJSON_AddNumberToObject(cpu,  "system",     gs.cpu.system);
-    cJSON_AddNumberToObject(cpu,  "idle",       gs.cpu.idle);
-    cJSON_AddNumberToObject(cpu,  "iowait",     gs.cpu.iowait);
-    cJSON_AddNumberToObject(cpu,  "irq",        gs.cpu.irq);
-    cJSON_AddNumberToObject(cpu,  "softirq",    gs.cpu.softirq);
-    cJSON_AddNumberToObject(cpu,  "steal",      gs.cpu.steal);
-    cJSON_AddNumberToObject(cpu,  "guest",      gs.cpu.guest);
-    cJSON_AddNumberToObject(cpu,  "guest_nice", gs.cpu.guest_nice);
+    // pull out the aggregate line
+    cJSON_AddStringToObject(cpu, "name", gs.cpu.name);
+    cJSON_AddNumberToObject(cpu, "nice", gs.cpu.nice);
+    cJSON_AddNumberToObject(cpu, "system", gs.cpu.system);
+    cJSON_AddNumberToObject(cpu, "idle", gs.cpu.idle);
+    cJSON_AddNumberToObject(cpu, "iowait", gs.cpu.iowait);
+    cJSON_AddNumberToObject(cpu, "irq", gs.cpu.irq);
+    cJSON_AddNumberToObject(cpu, "softirq", gs.cpu.softirq);
+    cJSON_AddNumberToObject(cpu, "steal", gs.cpu.steal);
+    cJSON_AddNumberToObject(cpu, "guest", gs.cpu.guest);
+    cJSON_AddNumberToObject(cpu, "guest_nice", gs.cpu.guest_nice);
     cJSON_AddItemToObject(root, "cpu", cpu);
 
+    // add per-core idle so front-end can compute % itself if needed
     cJSON *cores = cJSON_CreateArray();
     for (int i = 0; i < gs.num_cpus; ++i) {
-        cpu_stats *c = &gs.cores[i];
-        cJSON *cobj = cJSON_CreateObject();
-        cJSON_AddStringToObject(cobj, "name", c->name);
-        cJSON_AddNumberToObject(cobj, "idle", c->idle);
-        cJSON_AddItemToArray(cores, cobj);
+        cJSON *o = cJSON_CreateObject();
+        cJSON_AddStringToObject(o, "name", gs.cores[i].name);
+        cJSON_AddNumberToObject(o, "idle", gs.cores[i].idle);
+        cJSON_AddItemToArray(cores, o);
     }
     cJSON_AddItemToObject(root, "cores", cores);
 
-    cJSON_AddNumberToObject(root, "intr",         gs.intr_0);
-    cJSON_AddNumberToObject(root, "ctxt",         gs.ctxt);
-    cJSON_AddNumberToObject(root, "btime",        gs.btime);
-    cJSON_AddNumberToObject(root, "processes",    gs.processes);
-    cJSON_AddNumberToObject(root, "procs_running",gs.procs_running);
-    cJSON_AddNumberToObject(root, "procs_blocked",gs.procs_blocked);
-    cJSON_AddNumberToObject(root, "num_cpus",      gs.num_cpus);
+    // interrupts, context switches, etc
+    cJSON_AddNumberToObject(root, "intr", gs.intr_0);
+    cJSON_AddNumberToObject(root, "ctxt", gs.ctxt);
+    cJSON_AddNumberToObject(root, "btime", gs.btime);
+    cJSON_AddNumberToObject(root, "processes", gs.processes);
+    cJSON_AddNumberToObject(root, "procs_running", gs.procs_running);
+    cJSON_AddNumberToObject(root, "procs_blocked", gs.procs_blocked);
+    cJSON_AddNumberToObject(root, "num_cpus", gs.num_cpus);
 
     return send_json_response(conn, root);
 }
 
+/* GET /api/stats/network → download/upload + timestamp */
 static int handle_network_stats(struct MHD_Connection *conn) {
-    // 1) Fetch your general_stat (which contains net.total_download_MB, net.total_upload_MB, etc.)
     general_stat gs = get_cpu_stats();
-
-    // 2) Build a cJSON object
     cJSON *root = cJSON_CreateObject();
     cJSON_AddNumberToObject(root, "total_download_MB", gs.net.total_download_MB);
-    cJSON_AddNumberToObject(root, "total_upload_MB",   gs.net.total_upload_MB);
-
-    // 3) Compute a real timestamp (ms since epoch)
+    cJSON_AddNumberToObject(root, "total_upload_MB", gs.net.total_upload_MB);
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    uint64_t ts_ms = (uint64_t)tv.tv_sec * 1000 + (tv.tv_usec / 1000);
-    cJSON_AddNumberToObject(root, "timestamp_ms", ts_ms);
-
-    // 4) Serialize the JSON to a string
-    char *json_str = cJSON_PrintUnformatted(root);
-    cJSON_Delete(root);
-
-    // 5) Create an MHD response, add CORS, and queue it
-    struct MHD_Response *resp = MHD_create_response_from_buffer(
-        strlen(json_str),
-        (void *)json_str,
-        MHD_RESPMEM_MUST_FREE);
-
-    MHD_add_response_header(resp, "Content-Type", "application/json");
-    MHD_add_response_header(resp, "Access-Control-Allow-Origin", "*");
-
-    int ret = MHD_queue_response(conn, MHD_HTTP_OK, resp);
-    MHD_destroy_response(resp);
-    return ret;
+    uint64_t ts = (uint64_t)tv.tv_sec * 1000 + (tv.tv_usec / 1000);
+    cJSON_AddNumberToObject(root, "timestamp_ms", ts);
+    return send_json_response(conn, root);
 }
 
+/* GET /api/stats/disk → cumulative read/write */
 static int handle_disk_stats(struct MHD_Connection *conn) {
-    general_stat gs = get_cpu_stats();    
+    general_stat gs = get_cpu_stats();
     cJSON *root = cJSON_CreateObject();
-
-    // “total_read_MB” and “total_write_MB” are the cumulative MB values from /proc/diskstats
-    cJSON_AddNumberToObject(root, "total_read_MB",  gs.disk.read_MB);
+    cJSON_AddNumberToObject(root, "total_read_MB", gs.disk.read_MB);
     cJSON_AddNumberToObject(root, "total_write_MB", gs.disk.write_MB);
-
-    char *json_str = cJSON_PrintUnformatted(root);
-    cJSON_Delete(root);
-
-    struct MHD_Response *resp = MHD_create_response_from_buffer(
-        strlen(json_str),
-        (void *)json_str,
-        MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header(resp, "Content-Type", "application/json");
-    MHD_add_response_header(resp, "Access-Control-Allow-Origin", "*");
-    int ret = MHD_queue_response(conn, MHD_HTTP_OK, resp);
-    MHD_destroy_response(resp);
-    return ret;
+    return send_json_response(conn, root);
 }
 
+/* GET /api/stats/general → loadavg, tasks, cpu%, memory MB */
 static int handle_general_stats(struct MHD_Connection *conn) {
-    // 1) Fetch a fresh general_stat snapshot. This populates:
-    //      gs.total_cpu_utilization_percent
-    //      gs.memory.mem_total_kb, mem_free_kb, mem_available_kb, buffers_kb, cached_kb, swap_total_kb, swap_free_kb
     general_stat gs = get_cpu_stats();
-
-    // 2) Read /proc/loadavg to get load averages and task counts
-    double la1 = 0.0, la5 = 0.0, la15 = 0.0;
-    int running_tasks = 0, total_tasks = 0;
-    FILE *lf = fopen("/proc/loadavg", "r");
-    if (lf) {
-        // Format: “%lf %lf %lf %d/%d %*d\n”
-        fscanf(lf,
-               "%lf %lf %lf %d/%d %*d",
-               &la1, &la5, &la15,
-               &running_tasks, &total_tasks);
-        fclose(lf);
+    double la1, la5, la15;
+    int run, tot;
+    FILE *f = fopen("/proc/loadavg", "r");
+    if (f) {
+        fscanf(f, "%lf %lf %lf %d/%d %*d", &la1, &la5, &la15, &run, &tot);
+        fclose(f);
+    } else {
+        la1 = la5 = la15 = 0;
+        run = tot = 0;
     }
-    // If fopen() fails, the load averages stay at 0.0 and task counts at 0.
 
-    // 3) Build the JSON object
     cJSON *root = cJSON_CreateObject();
+    cJSON_AddNumberToObject(root, "loadavg1", la1);
+    cJSON_AddNumberToObject(root, "loadavg5", la5);
+    cJSON_AddNumberToObject(root, "loadavg15", la15);
+    cJSON_AddNumberToObject(root, "tasks_total", tot);
+    cJSON_AddNumberToObject(root, "tasks_running", run);
+    cJSON_AddNumberToObject(root, "cpu_util_percent", gs.total_cpu_utilization_percent);
 
-    // Top‐level load‐average & task fields
-    cJSON_AddNumberToObject(root, "loadavg1",      la1);
-    cJSON_AddNumberToObject(root, "loadavg5",      la5);
-    cJSON_AddNumberToObject(root, "loadavg15",     la15);
-    cJSON_AddNumberToObject(root, "tasks_total",   total_tasks);
-    cJSON_AddNumberToObject(root, "tasks_running", running_tasks);
-
-    // Add aggregate CPU utilization (%)
-    cJSON_AddNumberToObject(root,
-                            "cpu_util_percent",
-                            gs.total_cpu_utilization_percent);
-
-    // Nested “memory” object
     cJSON *mem = cJSON_CreateObject();
-    cJSON_AddNumberToObject(mem, "total_MB",      gs.memory.mem_total_kb     / 1024.0);
-    cJSON_AddNumberToObject(mem, "free_MB",       gs.memory.mem_free_kb      / 1024.0);
-    cJSON_AddNumberToObject(mem, "available_MB",  gs.memory.mem_available_kb / 1024.0);
-    cJSON_AddNumberToObject(mem, "buffers_MB",    gs.memory.buffers_kb       / 1024.0);
-    cJSON_AddNumberToObject(mem, "cached_MB",     gs.memory.cached_kb        / 1024.0);
-    cJSON_AddNumberToObject(mem, "swap_total_MB", gs.memory.swap_total_kb    / 1024.0);
-    cJSON_AddNumberToObject(mem, "swap_free_MB",  gs.memory.swap_free_kb     / 1024.0);
-
+    cJSON_AddNumberToObject(mem, "total_MB", gs.memory.mem_total_kb / 1024.0);
+    cJSON_AddNumberToObject(mem, "free_MB", gs.memory.mem_free_kb / 1024.0);
+    cJSON_AddNumberToObject(mem, "available_MB", gs.memory.mem_available_kb / 1024.0);
+    cJSON_AddNumberToObject(mem, "buffers_MB", gs.memory.buffers_kb / 1024.0);
+    cJSON_AddNumberToObject(mem, "cached_MB", gs.memory.cached_kb / 1024.0);
+    cJSON_AddNumberToObject(mem, "swap_total_MB", gs.memory.swap_total_kb / 1024.0);
+    cJSON_AddNumberToObject(mem, "swap_free_MB", gs.memory.swap_free_kb / 1024.0);
     cJSON_AddItemToObject(root, "memory", mem);
 
-    // 4) Serialize JSON to string, delete the cJSON tree
-    char *json_str = cJSON_PrintUnformatted(root);
-    cJSON_Delete(root);
-
-    // 5) Package into an MHD response, add headers (including CORS), and queue it
-    struct MHD_Response *resp = MHD_create_response_from_buffer(
-        strlen(json_str),
-        (void *)json_str,
-        MHD_RESPMEM_MUST_FREE);
-
-    // Always send Content-Type: application/json
-    MHD_add_response_header(resp, "Content-Type", "application/json");
-
-    // Add CORS header so that front‐end (on port 8080) can fetch from port 9000
-    MHD_add_response_header(resp, "Access-Control-Allow-Origin", "*");
-
-    int ret = MHD_queue_response(conn, MHD_HTTP_OK, resp);
-    MHD_destroy_response(resp);
-    return ret;
+    return send_json_response(conn, root);
 }
-
-
-
 
 int dispatch_stats_routes(struct MHD_Connection *conn,
                           const char *url,
-                          const char *method)
-{
-    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/cpu")) {
+                          const char *method) {
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/cpu"))
         return handle_cpu_stats(conn);
-    }
-    // NEW: If someone does GET /api/stats/network → handle network stats
-    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/network")) {
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/network"))
         return handle_network_stats(conn);
-    }
-     // NEW: GET /api/stats/disk 
-    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/disk")) {
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/disk"))
         return handle_disk_stats(conn);
-    }
-    // NEW: /api/stats/general
-    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/general")) {
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/stats/general"))
         return handle_general_stats(conn);
-    }
-    
     return 0;
 }
-
-
