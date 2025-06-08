@@ -23,6 +23,7 @@ typedef struct cpu_stats
     uint64_t steal;
     uint64_t guest;
     uint64_t guest_nice;
+    double core_percent;
 } cpu_stats;
 
 typedef struct disk_stats {
@@ -76,6 +77,7 @@ typedef struct general_stat { // create struct for storing process data
     disk_stats disk;
     network_stats net;
     gpu_stats gpu;
+    uint64_t timestamp_ms;
 } general_stat;
     
 

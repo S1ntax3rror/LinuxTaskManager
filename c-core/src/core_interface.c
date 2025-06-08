@@ -4,7 +4,6 @@
 #include <sys/resource.h>  // prlimit, setpriority
 #include <sys/types.h>
 #include <signal.h>
-#include <errno.h>
 #include "../include/general_stat_query.h"
 #include "../include/trimmed_info.h"
 #include "../include/memory_stats.h"
@@ -25,6 +24,7 @@ proc_stat before_list[MAX_PROCESS];
 proc_stat now_list[MAX_PROCESS]; 
 int proc_count = 0;
 int counter = 0;
+static general_stat before_gs = {0};
 
 /**
  * send_signal: wrapper around kill(2).
@@ -60,10 +60,18 @@ int set_ram_limit(int pid, rlim_t bytes) {
 // wrapper around your /proc/stat parser:
 general_stat get_cpu_stats(void) {
     char *raw = read_general_stat("/proc/stat");
-    general_stat gs = {0};
-    split_general_stat_string(raw, &gs);
+    general_stat now_gs = {0};
+    split_general_stat_string(raw, &now_gs);
     free(raw);
-    return gs;
+    gettimeofday(&now, NULL);
+    now_gs.timestamp_ms = (uint64_t)(now.tv_sec) * 1000 + (now.tv_usec / 1000);
+    
+    if (before_gs.timestamp_ms > 0) {
+        uint64_t delta_time = now_gs.timestamp_ms - before_gs.timestamp_ms;
+        calculate_normalized_core_cpu_usage(&before_gs, &now_gs, delta_time);
+    }
+    before_gs = now_gs;
+    return now_gs;
 }
 
 trimmed_info* get_process_list(int *out_count) {

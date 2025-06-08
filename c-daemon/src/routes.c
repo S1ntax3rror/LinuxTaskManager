@@ -13,7 +13,7 @@ int route_request(struct MHD_Connection *conn,
                   const char *body)
 {
     printf("%s\n", url);
-    int pid;
+    //int pid;
     //printf("WE WANT TO KILL %i\n", sscanf(url, "/api/processes/%d/signal", &pid));
     //printf("signal in url: %i\n", strstr(url, "/signal"));
     //printf("renice in url: %i\n", strstr(url, "/renice"));
@@ -22,6 +22,9 @@ int route_request(struct MHD_Connection *conn,
     // GET /api/processes
     if (!strcmp(method, "GET") && !strcmp(url, "/api/processes") && strstr(url, "/api/processes"))
         return handle_process_list(conn);
+
+    if (!strcmp(method, "GET") && !strcmp(url, "/api/cpu_mem") && strstr(url, "/api/cpu_mem"))
+        return handle_cores_and_memory(conn);
 
     // POST /api/processes/{pid}/signal
     {
@@ -47,7 +50,6 @@ int route_request(struct MHD_Connection *conn,
 
     // POST /api/processes/test_post
     {
-        int pid;
         if (!strcmp(method, "POST") &&
             sscanf(url, "/api/processes/test_post") == 0 &&
             strstr(url, "/test_post"))
