@@ -1,5 +1,4 @@
-// js/history.js
-
+// File: js/history.js
 document.addEventListener('DOMContentLoaded', () => {
   // ─── 1) DOM REFERENCES ────────────────────────────────────────────────────
   const timestampEl   = document.getElementById('timestamp');
@@ -106,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   let lastDiskTotals = null;
 
-  // ─── 5) CPU USAGE CHART (one‐line only) ──────────────────────────────────
+  // ─── 5) CPU USAGE CHART (single‐series) ──────────────────────────────────
   const cpuCtx       = document.getElementById('cpuChart').getContext('2d');
   let cpuHistory     = Array(MAX_POINTS).fill(0);
   const cpuChart = new Chart(cpuCtx, {
@@ -169,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ─── 7) POLLING FUNCTIONS ─────────────────────────────────────────────────
+
   // (a) General stats + timestamp
   async function updateGeneralStats() {
     try {
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Timestamp
       timestampEl.textContent = new Date().toLocaleTimeString();
 
-      // Fill spans
+      // Update top‐box stats
       loadAvgEl.textContent     = `${d.loadavg1.toFixed(2)}, ${d.loadavg5.toFixed(2)}, ${d.loadavg15.toFixed(2)}`;
       cpuUtilEl.textContent     = `${d.cpu_util_percent.toFixed(1)}%`;
       tasksInfoEl.textContent   = `total=${d.tasks_total}, running=${d.tasks_running}`;
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // (b) Network
+  // (b) Network speed
   async function updateNetwork() {
     try {
       const res = await fetch('/api/stats/network');
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // (c) Disk
+  // (c) Disk I/O
   async function updateDisk() {
     try {
       const res = await fetch('/api/stats/disk');
@@ -225,36 +225,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // (d) CPU (single series)
+  // (d) CPU history (single‐series)
   async function updateCpuHistory() {
     try {
       const res = await fetch('/api/stats/general');
       if (!res.ok) throw new Error(res.status);
       const d   = await res.json();
-      const util = d.cpu_util_percent;
-      pushTrim(cpuHistory, util);
+      pushTrim(cpuHistory, d.cpu_util_percent);
       cpuChart.update();
     } catch (e) {
       console.error('cpu history fetch failed', e);
     }
   }
 
-  // (e) Memory & Swap (all from general)
+  // (e) Memory & swap history
   async function updateMemoryHistory() {
     try {
       const res = await fetch('/api/stats/general');
       if (!res.ok) throw new Error(res.status);
       const d   = await res.json();
-      const mem = d.memory;
-      const used = mem.total_MB - mem.free_MB;
-      const swapUsed = mem.swap_total_MB - mem.swap_free_MB;
+      const m   = d.memory;
+      const used    = m.total_MB - m.free_MB;
+      const swapU   = m.swap_total_MB - m.swap_free_MB;
 
       pushTrim(memUsedArr,  used);
-      pushTrim(memFreeArr,  mem.free_MB);
-      pushTrim(cachedArr,   mem.cached_MB);
-      pushTrim(bufferedArr, mem.buffers_MB);
-      pushTrim(swapUsedArr, swapUsed);
-      pushTrim(swapFreeArr, mem.swap_free_MB);
+      pushTrim(memFreeArr,  m.free_MB);
+      pushTrim(cachedArr,   m.cached_MB);
+      pushTrim(bufferedArr, m.buffers_MB);
+      pushTrim(swapUsedArr, swapU);
+      pushTrim(swapFreeArr, m.swap_free_MB);
 
       memoryChart.update();
     } catch (e) {
@@ -262,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ─── 8) START EVERYTHING ─────────────────────────────────────────────────
+  // ─── 8) INITIALIZE + START POLLS ─────────────────────────────────────────
   updateGeneralStats();
   updateNetwork();
   updateDisk();
