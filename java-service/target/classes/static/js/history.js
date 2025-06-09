@@ -19,12 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
         title: { display: true, text: 'Elapsed (s)' },
         ticks: { autoSkip: true, maxTicksLimit: 12 }
       },
-      y: { beginAtZero: true, max: 100 }
+      y: { beginAtZero: true}
     },
     plugins: { legend: { position: 'top' } }
   };
-  const pushTrim = (arr, v) => { arr.shift(); arr.push(Math.max(0, Math.min(100, v))); };
-
+  const pushTrim = (arr, v) => { arr.shift(); arr.push(v); }
+  
   // ─── 3) SET UP CHART CONTAINERS ───────────────────────────────────────────
   const netCtx   = document.getElementById('networkChart').getContext('2d');
   const diskCtx  = document.getElementById('diskChart').getContext('2d');

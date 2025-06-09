@@ -31,24 +31,41 @@ function setSort(f) {
 
 async function fetchProcs() {
   try {
-    const res = await fetch('/api/processes');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    let procs = await res.json();
+    let procs = await fetch('/api/processes')
+                      .then(r => r.json());
 
-    // 1) Sort by chosen field
+    console.log("keys of first proc:", Object.keys(procs[0]));
+    console.log("first proc:", procs[0]);
+
+    // quick‐check what type is_sleeper comes in as:
+    console.log(
+      procs
+        .filter(p => p.is_sleeper != null)    // only those that have the field
+        .slice(0, 10)
+        .map(p => ({
+          pid: p.pid,
+          sleeper: p.is_sleeper,
+          type: typeof p.is_sleeper
+        }))
+    );
+
+    // 2) Sort by chosen field
     procs.sort((a, b) =>
       sortField === 'cpu'
         ? b.cpuPercent - a.cpuPercent
         : b.ramPercent - a.ramPercent
     );
 
-    // 2) Hide kernel threads if checkbox is checked:
-    const hideKernel = document.getElementById('chk-hide-kernel').checked;
-    if (hideKernel) {
+    if (document.getElementById('chk-hide-kernel').checked) {
       procs = procs.filter(p => !isKernelThread(p));
     }
 
-    // 3) Build table rows (columns must match index.html <th> order)
+    if (document.getElementById('chk-show-sleepers').checked) {
+      // ← use the exact key you saw in console!
+      procs = procs.filter(p => p.is_sleeper === 1);
+    }
+
+    // 5) Build table rows (columns must match index.html <th> order)
     document.getElementById('proc-table').innerHTML =
       procs.map(p => {
         // Truncate the “cmd” field to 50 characters for compact display
