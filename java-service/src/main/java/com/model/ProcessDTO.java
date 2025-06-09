@@ -1,5 +1,7 @@
 package com.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
 
 @Data
@@ -42,4 +44,8 @@ public class ProcessDTO {
 
     /** How many seconds this process has been running */
     private double  upTime;
+
+      /** 1 if this is a sleeper thread, 0 otherwise */
+    @JsonProperty("is_sleeper")
+    private int isSleeper;
 }
