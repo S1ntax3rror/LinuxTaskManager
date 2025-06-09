@@ -159,6 +159,15 @@ static int handle_all_stats(struct MHD_Connection *conn) {
 
     // cumulative read/write */
     cJSON *disc_stats  = cJSON_CreateObject();
+    for (int i=0; i<gs.num_disks; i++){
+        cJSON *disc = cJSON_CreateObject();
+        cJSON_AddStringToObject(disc, "name", gs.disk[i].name);
+        cJSON_AddNumberToObject(disc, "read_MB", gs.disk[i].read_MB);
+        cJSON_AddNumberToObject(disc, "write_MB", gs.disk[i].write_MB);
+        cJSON_AddItemToArray(disc_stats, disc);
+        gs.total_disk_read_MB += gs.disk[i].read_MB;
+        gs.total_disk_write_MB += gs.disk[i].write_MB;
+    }
     cJSON_AddNumberToObject(disc_stats, "total_read_MB", gs.total_disk_read_MB);
     cJSON_AddNumberToObject(disc_stats, "total_write_MB", gs.total_disk_write_MB);
     cJSON_AddItemToObject(root, "disc_stats", disc_stats);

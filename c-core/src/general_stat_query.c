@@ -257,7 +257,7 @@ int read_disk_stats(disk_stats disk[],int max_disk) {
     FILE* fp = fopen("/proc/diskstats", "r");
     if (!fp) {
         perror("Failed to open /proc/diskstats");
-        return;
+        return -1;
     }
     int counter = 0;
     char line[512];
