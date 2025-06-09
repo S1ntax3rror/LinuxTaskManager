@@ -28,7 +28,7 @@ typedef struct cpu_stats
 } cpu_stats;
 
 typedef struct disk_stats {
-    char name[32];
+    char name[64];
     uint64_t read_sectors;
     uint64_t write_sectors;
     float read_MB;

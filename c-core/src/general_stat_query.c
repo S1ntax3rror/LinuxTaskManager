@@ -247,10 +247,6 @@ int is_valid_disk(const char* dev){
     if (strncmp(dev,"nvme",4) == 0 && strchr(dev,'p')!=NULL){
         return 0;
     }
-    // not disks
-    if (strncmp(dev, "loop", 4) == 0 || strncmp(dev, "ram", 3) == 0 || strncmp(dev, "sr", 2) == 0 || strncmp(dev, "dm-", 3) == 0){
-        return 1;
-    }
     return 1;
 }
 int read_disk_stats(disk_stats disk[],int max_disk) {
@@ -292,6 +288,9 @@ int read_disk_stats(disk_stats disk[],int max_disk) {
             //printf("Disk read_MB: %.2f, write_MB: %.2f\n", disk[counter].read_MB, disk[counter].write_MB);
             
             counter++;
+            if (counter >= max_disk) {
+                break;
+            }
         }
     }
    
