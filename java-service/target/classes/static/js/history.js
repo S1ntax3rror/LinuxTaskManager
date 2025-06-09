@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
       labels,
       datasets: [
         {
-          label: 'Download (MB/s)',
+          label: 'Download (Mb/s)',
           data: netDownload,
           borderColor: 'rgba(54,162,235,1)',
           backgroundColor: 'rgba(54,162,235,0.1)',
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
           tension: 0.2
         },
         {
-          label: 'Upload (MB/s)',
+          label: 'Upload (Mb/s)',
           data: netUpload,
           borderColor: 'rgba(255,99,132,1)',
           backgroundColor: 'rgba(255,99,132,0.1)',
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ...baseOpts,
       scales: {
         ...baseOpts.scales,
-        y: { ...baseOpts.scales.y, title: { display: true, text: 'MB/s' } }
+        y: { ...baseOpts.scales.y, title: { display: true, text: 'Mb/s' } }
       }
     }
   });

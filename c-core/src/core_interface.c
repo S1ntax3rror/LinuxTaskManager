@@ -61,9 +61,19 @@ int set_ram_limit(int pid, rlim_t bytes) {
 general_stat get_cpu_stats(void) {
     char *raw = read_general_stat("/proc/stat");
     general_stat now_gs = {0};
+
+    //gettimeofday(&now, NULL);
+    //uint64_t time_before_split = (now.tv_usec / 1000);
+    
     split_general_stat_string(raw, &now_gs);
     free(raw);
-    gettimeofday(&now, NULL);
+
+    /*gettimeofday(&now, NULL);
+    uint64_t time_after_split = (now.tv_usec / 1000);
+    uint64_t time_diff = time_before_split - time_after_split;
+    printf("time taken for splitting general stat: %lu", time_diff);
+    */
+
     now_gs.timestamp_ms = (uint64_t)(now.tv_sec) * 1000 + (now.tv_usec / 1000);
     
     if (before_gs.timestamp_ms > 0) {
