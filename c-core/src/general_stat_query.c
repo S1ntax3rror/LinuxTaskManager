@@ -89,7 +89,7 @@ void calc_cpu_stats(general_stat* g_stat_pointer){
     uint64_t total_nonproductive_time = 0;
     uint64_t total_cpu_time = 0;
     
-    printf("Calculating CPU stats for %d cores\n", num_cpu);
+    //printf("Calculating CPU stats for %d cores\n", num_cpu);
 
     for (int i=0;i<num_cpu;i++){
         cpu_stats core_stat = g_stat_pointer->cores[i];
@@ -98,18 +98,8 @@ void calc_cpu_stats(general_stat* g_stat_pointer){
         total_cpu_time += core_stat.user + core_stat.nice + core_stat.system + core_stat.idle + core_stat.iowait + core_stat.irq + core_stat.steal;
     }
     
-    printf("Total nonproductive time: %lu\n", total_nonproductive_time);
-    printf("Total CPU time: %lu\n", total_cpu_time);
-
-    if (total_cpu_time > 0) {
-        g_stat_pointer->total_cpu_utilization_percent =
-            100.0 * (total_cpu_time - total_nonproductive_time) / total_cpu_time;
-    } else {
-        g_stat_pointer->total_cpu_utilization_percent = 0.0;
-    }
-
-    printf("CPU utilization percent: %.2f%%\n", g_stat_pointer->total_cpu_utilization_percent);
-
+    //printf("Total nonproductive time: %lu\n", total_nonproductive_time);
+    //printf("Total CPU time: %lu\n", total_cpu_time);
 }
 
 
@@ -253,19 +243,32 @@ void read_disk_stats(disk_stats* disk) {
     while (fgets(line, sizeof(line), fp)) {
         // Example line format (fields can vary slightly):
         // 8       0 sda 157698 2233 5023234 107284 301968 253103 6087329 425688 0 190192 532552
+        char dev[32];
+        int major, minor;
+        sscanf(line, "%d %d %31s", &major, &minor, dev);
 
-        if (strstr(line, "sda")) {  // only main disk
+        // Filter only full disks (e.g., "sda", "sdb", "nvme0n1"), exclude loops/partitions
+        if ((strncmp(dev, "sda", 3) == 0 || strncmp(dev, "nvme", 4) == 0) &&
+            strchr(dev, 'p') == NULL && strncmp(dev, "loop", 4) != 0 && strncmp(dev, "ram", 3) != 0) {
+
+            printf("Matched line: %s", line);
+            printf("Matched disk: %s\n", dev);
             unsigned long rd_ios, rd_merges, rd_sectors, rd_ticks;
             unsigned long wr_ios, wr_merges, wr_sectors, wr_ticks;
             sscanf(line,
                    "%*d %*d %*s %lu %lu %lu %lu %lu %lu %lu %lu",
                    &rd_ios, &rd_merges, &rd_sectors, &rd_ticks,
                    &wr_ios, &wr_merges, &wr_sectors, &wr_ticks);
+            
+
+            printf("Parsed values - read_sectors: %lu, write_sectors: %lu\n", rd_sectors, wr_sectors);
 
             disk->read_sectors = rd_sectors;
             disk->write_sectors = wr_sectors;
             disk->read_MB = rd_sectors * 512.0 / (1024.0 * 1024.0);  // 512 bytes/sector
             disk->write_MB = wr_sectors * 512.0 / (1024.0 * 1024.0);
+            printf("Disk read_MB: %.2f, write_MB: %.2f\n", disk->read_MB, disk->write_MB);
+
             break;
         }
     }
