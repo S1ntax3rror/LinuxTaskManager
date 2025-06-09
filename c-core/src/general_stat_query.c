@@ -249,7 +249,7 @@ int is_valid_disk(const char* dev){
     }
     // not disks
     if (strncmp(dev, "loop", 4) == 0 || strncmp(dev, "ram", 3) == 0 || strncmp(dev, "sr", 2) == 0 || strncmp(dev, "dm-", 3) == 0){
-        return 0;
+        return 1;
     }
     return 1;
 }
