@@ -272,8 +272,8 @@ int read_disk_stats(disk_stats disk[],int max_disk) {
         // Filter only full disks (e.g., "sda", "sdb", "nvme0n1"), exclude loops/partitions
         if (is_valid_disk(dev)) {
 
-            printf("Matched line: %s", line);
-            printf("Matched disk: %s\n", dev);
+            //printf("Matched line: %s", line);
+            //printf("Matched disk: %s\n", dev);
             unsigned long rd_ios, rd_merges, rd_sectors, rd_ticks;
             unsigned long wr_ios, wr_merges, wr_sectors, wr_ticks;
             sscanf(line,
@@ -282,15 +282,15 @@ int read_disk_stats(disk_stats disk[],int max_disk) {
                    &wr_ios, &wr_merges, &wr_sectors, &wr_ticks);
             
 
-            printf("Parsed values - read_sectors: %lu, write_sectors: %lu\n", rd_sectors, wr_sectors);
+            //printf("Parsed values - read_sectors: %lu, write_sectors: %lu\n", rd_sectors, wr_sectors);
             strncpy(disk[counter].name, dev, sizeof(disk[counter].name) - 1);
             disk[counter].name[sizeof(disk[counter].name) - 1] = '\0';
             disk[counter].read_sectors = rd_sectors;
             disk[counter].write_sectors = wr_sectors;
             disk[counter].read_MB = rd_sectors * 512.0 / (1024.0 * 1024.0);  // 512 bytes/sector
             disk[counter].write_MB = wr_sectors * 512.0 / (1024.0 * 1024.0);
-            printf("Disk read_MB: %.2f, write_MB: %.2f\n", disk[counter].read_MB, disk[counter].write_MB);
-
+            //printf("Disk read_MB: %.2f, write_MB: %.2f\n", disk[counter].read_MB, disk[counter].write_MB);
+            
             counter++;
         }
     }
