@@ -6,12 +6,26 @@
 #include <stdint.h>
 #include <string.h>
 
-/* GET /api/stats/cpu → basic cpu/interrupt/etc stats */
+/** ---------------------------------------------------------------------
+ * Implements HTTP Handlers for our stats ("/api/stats/...") endpoints.
+ * 1. cpu, 2. network, 3. disk, 4. general stats plus dispatcher 
+ -----------------------------------------------------------------------*/
+
+/*
+ * Handle GET /api/stats/cpu
+ * -------------------------
+ * Returns a JSON object with aggregate CPU fields and per-core idle times.
+ */
 static int handle_cpu_stats(struct MHD_Connection *conn) {
+    // Fetch latest CPU stats (reads /proc/stat, computes percentages)
     general_stat gs = get_cpu_stats();
+
+    // Build root JSON object
     cJSON *root = cJSON_CreateObject();
+    // Create nested "cpu" object for aggregate CPU line
     cJSON *cpu  = cJSON_CreateObject();
-    // pull out the aggregate line
+
+    // Populate aggregate CPU metrics
     cJSON_AddStringToObject(cpu, "name", gs.cpu.name);
     cJSON_AddNumberToObject(cpu, "nice", gs.cpu.nice);
     cJSON_AddNumberToObject(cpu, "system", gs.cpu.system);
@@ -22,19 +36,24 @@ static int handle_cpu_stats(struct MHD_Connection *conn) {
     cJSON_AddNumberToObject(cpu, "steal", gs.cpu.steal);
     cJSON_AddNumberToObject(cpu, "guest", gs.cpu.guest);
     cJSON_AddNumberToObject(cpu, "guest_nice", gs.cpu.guest_nice);
+
+    // Attach "cpu" object to root
     cJSON_AddItemToObject(root, "cpu", cpu);
 
-    // add per-core idle so front-end can compute % itself if needed
+    // Build per-core idle times for front-end calculations
     cJSON *cores = cJSON_CreateArray();
     for (int i = 0; i < gs.num_cpus; ++i) {
         cJSON *o = cJSON_CreateObject();
+        // Label each core by name (e.g. "cpu0", "cpu1")
         cJSON_AddStringToObject(o, "name", gs.cores[i].name);
+        // Report idle ticks for front-end to compute usage if needed
         cJSON_AddNumberToObject(o, "idle", gs.cores[i].idle);
         cJSON_AddItemToArray(cores, o);
     }
+    // Attach cores array to root
     cJSON_AddItemToObject(root, "cores", cores);
 
-    // interrupts, context switches, etc
+    // Add other system counters: interrupts, context switches, etc.
     cJSON_AddNumberToObject(root, "intr", gs.intr_0);
     cJSON_AddNumberToObject(root, "ctxt", gs.ctxt);
     cJSON_AddNumberToObject(root, "btime", gs.btime);
@@ -43,34 +62,61 @@ static int handle_cpu_stats(struct MHD_Connection *conn) {
     cJSON_AddNumberToObject(root, "procs_blocked", gs.procs_blocked);
     cJSON_AddNumberToObject(root, "num_cpus", gs.num_cpus);
 
+    // Send the JSON response with HTTP 200
     return send_json_response(conn, root);
 }
 
-/* GET /api/stats/network → download/upload + timestamp */
+
+/*
+ * Handle GET /api/stats/network
+ * ------------------------------
+ * Returns cumulative download/upload MB and a timestamp.
+ */
 static int handle_network_stats(struct MHD_Connection *conn) {
+    // Gather network totals from core interface
     general_stat gs = get_cpu_stats();
     cJSON *root = cJSON_CreateObject();
+
+    // Report total bytes (converted to MB by core code)
     cJSON_AddNumberToObject(root, "total_download_MB", gs.net.total_download_MB);
     cJSON_AddNumberToObject(root, "total_upload_MB", gs.net.total_upload_MB);
+
+    // Add a timestamp (ms since epoch) for chart X-axis
     struct timeval tv;
     gettimeofday(&tv, NULL);
     uint64_t ts = (uint64_t)tv.tv_sec * 1000 + (tv.tv_usec / 1000);
     cJSON_AddNumberToObject(root, "timestamp_ms", ts);
+
     return send_json_response(conn, root);
 }
 
-/* GET /api/stats/disk → cumulative read/write */
+
+/*
+ * Handle GET /api/stats/disk
+ * ---------------------------
+ * Returns cumulative disk read/write MB.
+ */
 static int handle_disk_stats(struct MHD_Connection *conn) {
     general_stat gs = get_cpu_stats();
     cJSON *root = cJSON_CreateObject();
+
     cJSON_AddNumberToObject(root, "total_read_MB", gs.disk.read_MB);
     cJSON_AddNumberToObject(root, "total_write_MB", gs.disk.write_MB);
+
     return send_json_response(conn, root);
 }
 
-/* GET /api/stats/general → loadavg, tasks, cpu%, memory MB */
+
+/*
+ * Handle GET /api/stats/general
+ * ------------------------------
+ * Combines load averages, task counts, CPU%, and memory info.
+ */
 static int handle_general_stats(struct MHD_Connection *conn) {
+    // Get CPU and memory stats in one call
     general_stat gs = get_cpu_stats();
+
+    // Read load average and task counts from /proc/loadavg
     double la1, la5, la15;
     int run, tot;
     FILE *f = fopen("/proc/loadavg", "r");
@@ -78,18 +124,23 @@ static int handle_general_stats(struct MHD_Connection *conn) {
         fscanf(f, "%lf %lf %lf %d/%d %*d", &la1, &la5, &la15, &run, &tot);
         fclose(f);
     } else {
+        // Fallback if file open fails
         la1 = la5 = la15 = 0;
         run = tot = 0;
     }
 
     cJSON *root = cJSON_CreateObject();
+    // Attach load averages
     cJSON_AddNumberToObject(root, "loadavg1", la1);
     cJSON_AddNumberToObject(root, "loadavg5", la5);
     cJSON_AddNumberToObject(root, "loadavg15", la15);
+    // Attach task totals and running count
     cJSON_AddNumberToObject(root, "tasks_total", tot);
     cJSON_AddNumberToObject(root, "tasks_running", run);
+    // Attach overall CPU utilization percentage
     cJSON_AddNumberToObject(root, "cpu_util_percent", gs.total_cpu_utilization_percent);
 
+    // Build a nested memory object reporting MB (converted in core code)
     cJSON *mem = cJSON_CreateObject();
     cJSON_AddNumberToObject(mem, "total_MB", gs.memory.mem_total_kb / 1024.0);
     cJSON_AddNumberToObject(mem, "free_MB", gs.memory.mem_free_kb / 1024.0);
@@ -198,6 +249,11 @@ static int handle_all_stats(struct MHD_Connection *conn) {
 }
 
 
+
+/*
+ * Dispatch incoming /api/stats/* requests to their handlers.
+ * Returns non-zero if a handler was invoked, or 0 if URL didn't match.
+ */
 int dispatch_stats_routes(struct MHD_Connection *conn,
                           const char *url,
                           const char *method) {
