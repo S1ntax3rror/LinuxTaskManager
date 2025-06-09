@@ -58,7 +58,7 @@ static int handle_network_stats(struct MHD_Connection *conn) {
     cJSON_AddNumberToObject(root, "timestamp_ms", ts);
     return send_json_response(conn, root);
 }
-
+/* todo is now an array of disk, not only one */
 /* GET /api/stats/disk → cumulative read/write */
 static int handle_disk_stats(struct MHD_Connection *conn) {
     general_stat gs = get_cpu_stats();

@@ -190,7 +190,7 @@ void split_general_stat_string(char* inp_string, general_stat* stat_pointer){
 
     read_memory_stats(&stat_pointer->memory);
     // disk, net, gpu
-    read_disk_stats(&stat_pointer->disk,MAX_DISK);
+    stat_pointer->num_disks = read_disk_stats(stat_pointer->disk,MAX_DISK);
     read_network_stats(&stat_pointer->net);
     
     read_gpu_stats(&stat_pointer->gpu);
@@ -253,18 +253,18 @@ int is_valid_disk(const char* dev){
     }
     return 1;
 }
-void read_disk_stats(disk_stats disk[],int max_disk) {
+int read_disk_stats(disk_stats disk[],int max_disk) {
     FILE* fp = fopen("/proc/diskstats", "r");
     if (!fp) {
         perror("Failed to open /proc/diskstats");
         return;
     }
-
+    int counter = 0;
     char line[512];
     while (fgets(line, sizeof(line), fp)) {
         // Example line format (fields can vary slightly):
         // 8       0 sda 157698 2233 5023234 107284 301968 253103 6087329 425688 0 190192 532552
-        int counter = 0;
+       
         char dev[32];
         int major, minor;
         sscanf(line, "%d %d %31s", &major, &minor, dev);
@@ -283,7 +283,8 @@ void read_disk_stats(disk_stats disk[],int max_disk) {
             
 
             printf("Parsed values - read_sectors: %lu, write_sectors: %lu\n", rd_sectors, wr_sectors);
-
+            strncpy(disk[counter].name, dev, sizeof(disk[counter].name) - 1);
+            disk[counter].name[sizeof(disk[counter].name) - 1] = '\0';
             disk[counter].read_sectors = rd_sectors;
             disk[counter].write_sectors = wr_sectors;
             disk[counter].read_MB = rd_sectors * 512.0 / (1024.0 * 1024.0);  // 512 bytes/sector
@@ -293,8 +294,10 @@ void read_disk_stats(disk_stats disk[],int max_disk) {
             counter++;
         }
     }
+   
 
     fclose(fp);
+    return counter;
 }
 
 void read_network_stats(network_stats* net) {

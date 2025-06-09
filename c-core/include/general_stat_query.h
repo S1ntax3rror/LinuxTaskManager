@@ -77,6 +77,7 @@ typedef struct general_stat { // create struct for storing process data
     float network_avg_download_speed;
     memory_stats memory;
     disk_stats disk[MAX_DISK];
+    int num_disks;
     network_stats net;
     gpu_stats gpu;
     uint64_t timestamp_ms;
@@ -88,7 +89,7 @@ void set_field_in_general_stat(general_stat* stat_container, int index, char* va
 void split_general_stat_string(char* inp_string, general_stat* stat_pointer);
 char* read_general_stat(const char* path);
 int is_valid_disk(const char* dev);
-void read_disk_stats(disk_stats disk[],int max_disk);
+int read_disk_stats(disk_stats disk[],int max_disk);
 void read_network_stats(network_stats* net);
 void read_gpu_stats(gpu_stats* gpu);
 int has_nvidia_gpu();
