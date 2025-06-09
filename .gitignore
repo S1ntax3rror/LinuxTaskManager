@@ -6,3 +6,4 @@ c-daemon/http_server
 .cached/clangd/index/*
 compile_commands.json
 .vscode/*
+java-service/.idea/*
