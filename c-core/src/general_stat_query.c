@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 
 void print_cpu_stats(cpu_stats* cpu_container) {
@@ -189,7 +190,7 @@ void split_general_stat_string(char* inp_string, general_stat* stat_pointer){
 
     read_memory_stats(&stat_pointer->memory);
     // disk, net, gpu
-    read_disk_stats(&stat_pointer->disk);
+    stat_pointer->num_disks = read_disk_stats(stat_pointer->disk,MAX_DISK);
     read_network_stats(&stat_pointer->net);
     
     read_gpu_stats(&stat_pointer->gpu);
@@ -232,27 +233,47 @@ size_t capacity = 10000;
     fclose(fp);
     return data;
 }
-void read_disk_stats(disk_stats* disk) {
+
+int is_valid_disk(const char* dev){
+    size_t len = strlen(dev);
+
+    if (strncmp(dev, "sd", 2) == 0){
+    // sd partition check 
+        if(!isalpha(dev[len-1])){
+            return 0;
+        }
+    }
+    //nvme partion check
+    if (strncmp(dev,"nvme",4) == 0 && strchr(dev,'p')!=NULL){
+        return 0;
+    }
+    // not disks
+    if (strncmp(dev, "loop", 4) == 0 || strncmp(dev, "ram", 3) == 0 || strncmp(dev, "sr", 2) == 0 || strncmp(dev, "dm-", 3) == 0){
+        return 0;
+    }
+    return 1;
+}
+int read_disk_stats(disk_stats disk[],int max_disk) {
     FILE* fp = fopen("/proc/diskstats", "r");
     if (!fp) {
         perror("Failed to open /proc/diskstats");
-        return;
+        return -1;
     }
-
+    int counter = 0;
     char line[512];
     while (fgets(line, sizeof(line), fp)) {
         // Example line format (fields can vary slightly):
         // 8       0 sda 157698 2233 5023234 107284 301968 253103 6087329 425688 0 190192 532552
+       
         char dev[32];
         int major, minor;
         sscanf(line, "%d %d %31s", &major, &minor, dev);
 
         // Filter only full disks (e.g., "sda", "sdb", "nvme0n1"), exclude loops/partitions
-        if ((strncmp(dev, "sda", 3) == 0 || strncmp(dev, "nvme", 4) == 0) &&
-            strchr(dev, 'p') == NULL && strncmp(dev, "loop", 4) != 0 && strncmp(dev, "ram", 3) != 0) {
+        if (is_valid_disk(dev)) {
 
-            printf("Matched line: %s", line);
-            printf("Matched disk: %s\n", dev);
+            //printf("Matched line: %s", line);
+            //printf("Matched disk: %s\n", dev);
             unsigned long rd_ios, rd_merges, rd_sectors, rd_ticks;
             unsigned long wr_ios, wr_merges, wr_sectors, wr_ticks;
             sscanf(line,
@@ -261,19 +282,22 @@ void read_disk_stats(disk_stats* disk) {
                    &wr_ios, &wr_merges, &wr_sectors, &wr_ticks);
             
 
-            printf("Parsed values - read_sectors: %lu, write_sectors: %lu\n", rd_sectors, wr_sectors);
-
-            disk->read_sectors = rd_sectors;
-            disk->write_sectors = wr_sectors;
-            disk->read_MB = rd_sectors * 512.0 / (1024.0 * 1024.0);  // 512 bytes/sector
-            disk->write_MB = wr_sectors * 512.0 / (1024.0 * 1024.0);
-            printf("Disk read_MB: %.2f, write_MB: %.2f\n", disk->read_MB, disk->write_MB);
-
-            break;
+            //printf("Parsed values - read_sectors: %lu, write_sectors: %lu\n", rd_sectors, wr_sectors);
+            strncpy(disk[counter].name, dev, sizeof(disk[counter].name) - 1);
+            disk[counter].name[sizeof(disk[counter].name) - 1] = '\0';
+            disk[counter].read_sectors = rd_sectors;
+            disk[counter].write_sectors = wr_sectors;
+            disk[counter].read_MB = rd_sectors * 512.0 / (1024.0 * 1024.0);  // 512 bytes/sector
+            disk[counter].write_MB = wr_sectors * 512.0 / (1024.0 * 1024.0);
+            //printf("Disk read_MB: %.2f, write_MB: %.2f\n", disk[counter].read_MB, disk[counter].write_MB);
+            
+            counter++;
         }
     }
+   
 
     fclose(fp);
+    return counter;
 }
 
 void read_network_stats(network_stats* net) {

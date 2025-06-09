@@ -67,8 +67,8 @@ int main() {
     split_general_stat_string(stat_data, &general_stat_container);
     print_general_stat(&general_stat_container);
 
-    printf("\nDisk Read: %.2f MB\n", general_stat_container.disk.read_MB);
-    printf("Disk Write: %.2f MB\n", general_stat_container.disk.write_MB);
+    printf("\nDisk Read: %.2f MB\n", general_stat_container.disk[0].read_MB);
+    printf("Disk Write: %.2f MB\n", general_stat_container.disk[0].write_MB);
 
     printf("Download: %.2f MB\n", general_stat_container.net.total_download_MB);
     printf("Upload:   %.2f MB\n", general_stat_container.net.total_upload_MB);

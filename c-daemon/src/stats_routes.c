@@ -99,10 +99,8 @@ static int handle_network_stats(struct MHD_Connection *conn) {
 static int handle_disk_stats(struct MHD_Connection *conn) {
     general_stat gs = get_cpu_stats();
     cJSON *root = cJSON_CreateObject();
-
-    cJSON_AddNumberToObject(root, "total_read_MB", gs.disk.read_MB);
-    cJSON_AddNumberToObject(root, "total_write_MB", gs.disk.write_MB);
-
+    cJSON_AddNumberToObject(root, "total_read_MB", gs.total_disk_read_MB);
+    cJSON_AddNumberToObject(root, "total_write_MB", gs.total_disk_write_MB);
     return send_json_response(conn, root);
 }
 
@@ -210,9 +208,31 @@ static int handle_all_stats(struct MHD_Connection *conn) {
 
     // cumulative read/write */
     cJSON *disc_stats  = cJSON_CreateObject();
-    cJSON_AddNumberToObject(disc_stats, "total_read_MB", gs.disk.read_MB);
-    cJSON_AddNumberToObject(disc_stats, "total_write_MB", gs.disk.write_MB);
+    for (int i=0; i<gs.num_disks; i++){
+        cJSON *disc = cJSON_CreateObject();
+        cJSON_AddStringToObject(disc, "name", gs.disk[i].name);
+        cJSON_AddNumberToObject(disc, "read_MB", gs.disk[i].read_MB);
+        cJSON_AddNumberToObject(disc, "write_MB", gs.disk[i].write_MB);
+        cJSON_AddItemToArray(disc_stats, disc);
+        gs.total_disk_read_MB += gs.disk[i].read_MB;
+        gs.total_disk_write_MB += gs.disk[i].write_MB;
+    }
+    cJSON_AddNumberToObject(disc_stats, "total_read_MB", gs.total_disk_read_MB);
+    cJSON_AddNumberToObject(disc_stats, "total_write_MB", gs.total_disk_write_MB);
     cJSON_AddItemToObject(root, "disc_stats", disc_stats);
+
+    /* todo is now per disk, i tried */
+    cJSON *disks_stats = cJSON_CreateArray();
+    for (int i = 0; i < gs.num_disks; ++i) {
+        cJSON *o = cJSON_CreateObject();
+        char key[16];
+        snprintf(key, sizeof(key), "disk%d", i);
+        cJSON_AddStringToObject(o, "name", gs.disk[i].name);
+        cJSON_AddNumberToObject(o, "read_MB", gs.disk[i].read_MB);
+        cJSON_AddNumberToObject(o, "write_MB", gs.disk[i].write_MB);
+        cJSON_AddItemToArray(disks_stats, o);
+    }
+
     
     // loadavg, tasks, cpu%, memory MB */
     double la1, la5, la15;
