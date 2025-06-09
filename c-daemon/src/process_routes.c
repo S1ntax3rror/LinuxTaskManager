@@ -60,10 +60,9 @@ int handle_process_list(struct MHD_Connection *conn) {
     // send_json_response already sets Content-Type; no CORS here
     return send_json_response(conn, arr);
 }
-
-/*
- * GET /api/cpu_mem
- * Return per-core % and memory+swap stats
+ /*
+ * Handle GET /api/cpu_mem
+ * Return a JSON array of all processes (trimmed_info).
  */
 int handle_cores_and_memory(struct MHD_Connection *conn) {
     general_stat gs = get_cpu_stats();
