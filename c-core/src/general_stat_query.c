@@ -88,20 +88,28 @@ void calc_cpu_stats(general_stat* g_stat_pointer){
     int num_cpu = g_stat_pointer->num_cpus;
     uint64_t total_nonproductive_time = 0;
     uint64_t total_cpu_time = 0;
+    
+    printf("Calculating CPU stats for %d cores\n", num_cpu);
+
     for (int i=0;i<num_cpu;i++){
         cpu_stats core_stat = g_stat_pointer->cores[i];
         //print_cpu_stats(&core_stat);
         total_nonproductive_time = total_nonproductive_time + core_stat.iowait + core_stat.idle;
         total_cpu_time += core_stat.user + core_stat.nice + core_stat.system + core_stat.idle + core_stat.iowait + core_stat.irq + core_stat.steal;
     }
-    //float cpu_percent = total_nonproductive_time/total_cpu_time;
-    //printf("total time nonprod: %li, total prod time: %li, total cpu percent: %f \n\n", total_nonproductive_time, total_cpu_time, cpu_percent);
+    
+    printf("Total nonproductive time: %lu\n", total_nonproductive_time);
+    printf("Total CPU time: %lu\n", total_cpu_time);
+
     if (total_cpu_time > 0) {
         g_stat_pointer->total_cpu_utilization_percent =
             100.0 * (total_cpu_time - total_nonproductive_time) / total_cpu_time;
     } else {
         g_stat_pointer->total_cpu_utilization_percent = 0.0;
     }
+
+    printf("CPU utilization percent: %.2f%%\n", g_stat_pointer->total_cpu_utilization_percent);
+
 }
 
 

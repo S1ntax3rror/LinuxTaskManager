@@ -62,7 +62,6 @@ general_stat get_cpu_stats(void) {
     char *raw = read_general_stat("/proc/stat");
     general_stat now_gs = {0};
 
-    //gettimeofday(&now, NULL);
     //uint64_t time_before_split = (now.tv_usec / 1000);
     
     split_general_stat_string(raw, &now_gs);
@@ -74,11 +73,13 @@ general_stat get_cpu_stats(void) {
     printf("time taken for splitting general stat: %lu", time_diff);
     */
 
+    gettimeofday(&now, NULL);
     now_gs.timestamp_ms = (uint64_t)(now.tv_sec) * 1000 + (now.tv_usec / 1000);
     
     if (before_gs.timestamp_ms > 0) {
         uint64_t delta_time = now_gs.timestamp_ms - before_gs.timestamp_ms;
         calculate_normalized_core_cpu_usage(&before_gs, &now_gs, delta_time);
+        calculate_normalized_general_cpu_usage(&before_gs, &now_gs, delta_time);
     }
     before_gs = now_gs;
     return now_gs;

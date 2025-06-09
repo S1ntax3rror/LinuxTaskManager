@@ -21,6 +21,35 @@ void calculate_normalized_cpu_usage(proc_stat* before, proc_stat* after, uint64_
     }
 }
 
+
+void calculate_normalized_general_cpu_usage(general_stat* before, general_stat* after, uint64_t interval_seconds) {
+    long clock_ticks = sysconf(_SC_CLK_TCK);
+    int num_cores = sysconf(_SC_NPROCESSORS_ONLN);
+    
+    
+    printf("Clock ticks per second: %ld\n", clock_ticks);
+    printf("Number of CPU cores: %d\n", num_cores);
+
+    uint64_t proc_time_before = before->cpu.system + before->cpu.user;
+    uint64_t proc_time_after = after->cpu.system + after->cpu.user;;
+    uint64_t delta_proc_time = proc_time_after - proc_time_before;
+    
+    printf("Proc time before: %lu\n", proc_time_before);
+    printf("Proc time after:  %lu\n", proc_time_after);
+    printf("Delta proc time:  %lu\n", delta_proc_time);
+
+    double seconds_used = ((double)delta_proc_time*1000) / clock_ticks;
+    printf("Seconds used (ms): %f\n", seconds_used);
+
+    if (delta_proc_time > 0){
+        after->total_cpu_utilization_percent = 100.0 * (seconds_used / (interval_seconds * num_cores));
+    } else {
+        after->total_cpu_utilization_percent = 0.0;
+    }
+    printf("CPU utilization (%%): %f\n", after->total_cpu_utilization_percent);
+}
+
+
 void calculate_normalized_core_cpu_usage(general_stat* before, general_stat* after, uint64_t interval_ms) {
     long clock_ticks = sysconf(_SC_CLK_TCK);
     
