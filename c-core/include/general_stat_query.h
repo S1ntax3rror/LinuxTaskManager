@@ -9,6 +9,7 @@
 
 #include "memory_stats.h"
 
+#define MAX_DISK 32
 
 typedef struct cpu_stats
 {
@@ -27,6 +28,7 @@ typedef struct cpu_stats
 } cpu_stats;
 
 typedef struct disk_stats {
+    char name[32];
     uint64_t read_sectors;
     uint64_t write_sectors;
     float read_MB;
@@ -74,7 +76,7 @@ typedef struct general_stat { // create struct for storing process data
     float network_avg_upload_speed;
     float network_avg_download_speed;
     memory_stats memory;
-    disk_stats disk;
+    disk_stats disk[MAX_DISK];
     network_stats net;
     gpu_stats gpu;
     uint64_t timestamp_ms;
@@ -85,7 +87,8 @@ void print_general_stat(general_stat *stat_container);
 void set_field_in_general_stat(general_stat* stat_container, int index, char* value);
 void split_general_stat_string(char* inp_string, general_stat* stat_pointer);
 char* read_general_stat(const char* path);
-void read_disk_stats(disk_stats* disk);
+int is_valid_disk(const char* dev);
+void read_disk_stats(disk_stats disk[],int max_disk);
 void read_network_stats(network_stats* net);
 void read_gpu_stats(gpu_stats* gpu);
 int has_nvidia_gpu();

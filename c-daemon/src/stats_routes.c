@@ -63,8 +63,8 @@ static int handle_network_stats(struct MHD_Connection *conn) {
 static int handle_disk_stats(struct MHD_Connection *conn) {
     general_stat gs = get_cpu_stats();
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, "total_read_MB", gs.disk.read_MB);
-    cJSON_AddNumberToObject(root, "total_write_MB", gs.disk.write_MB);
+    cJSON_AddNumberToObject(root, "total_read_MB", gs.disk[0].read_MB);
+    cJSON_AddNumberToObject(root, "total_write_MB", gs.disk[0].write_MB);
     return send_json_response(conn, root);
 }
 
@@ -159,8 +159,8 @@ static int handle_all_stats(struct MHD_Connection *conn) {
 
     // cumulative read/write */
     cJSON *disc_stats  = cJSON_CreateObject();
-    cJSON_AddNumberToObject(disc_stats, "total_read_MB", gs.disk.read_MB);
-    cJSON_AddNumberToObject(disc_stats, "total_write_MB", gs.disk.write_MB);
+    cJSON_AddNumberToObject(disc_stats, "total_read_MB", gs.total_disk_read_MB);
+    cJSON_AddNumberToObject(disc_stats, "total_write_MB", gs.total_disk_write_MB);
     cJSON_AddItemToObject(root, "disc_stats", disc_stats);
     
     // loadavg, tasks, cpu%, memory MB */
