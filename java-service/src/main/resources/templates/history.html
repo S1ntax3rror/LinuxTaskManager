@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>History &amp; General Stats</title>
 
-  <!-- Favicon -->
-  <link rel="icon" href="ltm_icon.ico" type="image/x-icon" />
+  <!-- Favicon (served from /static/ltm_icon.ico) -->
+  <link rel="shortcut icon" href="/ltm_icon.ico" type="image/x-icon" />
 
   <!-- Bootstrap CSS -->
   <link
@@ -22,48 +23,63 @@
 
 <body class="bg-light">
   <div class="container py-5">
+
     <!-- ─── Header ─────────────────────────────────────────────────────────── -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>History &amp; General Stats</h2>
+      <h1 class="display-4 fw-bold">
+        History &amp; General Stats
+      </h1>
       <a href="/" class="btn btn-outline-secondary">&larr; Back to Dashboard</a>
     </div>
 
     <!-- ─── Last‐Updated Timestamp ───────────────────────────────────────────── -->
-    <div class="mb-3">
+    <div class="mb-4">
       <small class="text-muted">
         Last updated: <span id="timestamp">--:--:--</span>
       </small>
     </div>
 
     <!-- ─── General System Stats ────────────────────────────────────────────── -->
-    <div class="mb-4">
-      <div class="mb-2">
-        <strong>Load Avg (1m, 5m, 15m):</strong>
-        <span id="loadAvg">- , - , -</span>
+    <div class="row g-3 mb-5">
+      <div class="col-sm-6 col-lg-4">
+        <div class="p-3 border rounded shadow-sm bg-white text-center">
+          <small class="text-muted d-block">Load Avg (1m,5m,15m)</small>
+          <h4 id="loadAvg" class="mb-0">– , – , –</h4>
+        </div>
       </div>
-      <div class="mb-2">
-        <strong>CPU Util:</strong>
-        <span id="cpuUtil">- %</span>
+      <div class="col-sm-6 col-lg-4">
+        <div class="p-3 border rounded shadow-sm bg-white text-center">
+          <small class="text-muted d-block">CPU Util</small>
+          <h4 id="cpuUtil" class="mb-0">– %</h4>
+        </div>
       </div>
-      <div class="mb-2">
-        <strong>Tasks:</strong>
-        <span id="tasksInfo">total=-, running=-</span>
+      <div class="col-sm-6 col-lg-4">
+        <div class="p-3 border rounded shadow-sm bg-white text-center">
+          <small class="text-muted d-block">Tasks</small>
+          <h4 id="tasksInfo" class="mb-0">total=–, running=–</h4>
+        </div>
       </div>
-      <div class="mb-2">
-        <strong>Memory (MB):</strong>
-        <span id="memoryInfo">total=- MB, free=- MB, avail=- MB</span>
+      <div class="col-sm-6 col-lg-4">
+        <div class="p-3 border rounded shadow-sm bg-white text-center">
+          <small class="text-muted d-block">Memory (MB)</small>
+          <h4 id="memoryInfo" class="mb-0">total=– MB, free=– MB</h4>
+        </div>
       </div>
-      <div class="mb-2">
-        <strong>Buffers + Cached:</strong>
-        <span id="buffersInfo">buffers=- MB, cached=- MB</span>
+      <div class="col-sm-6 col-lg-4">
+        <div class="p-3 border rounded shadow-sm bg-white text-center">
+          <small class="text-muted d-block">Buffers + Cached</small>
+          <h4 id="buffersInfo" class="mb-0">buffers=– MB, cached=– MB</h4>
+        </div>
       </div>
-      <div class="mb-2">
-        <strong>Swap (MB):</strong>
-        <span id="swapInfo">total=- MB, free=- MB</span>
+      <div class="col-sm-6 col-lg-4">
+        <div class="p-3 border rounded shadow-sm bg-white text-center">
+          <small class="text-muted d-block">Swap (MB)</small>
+          <h4 id="swapInfo" class="mb-0">total=– MB, free=– MB</h4>
+        </div>
       </div>
     </div>
 
-    <!-- ─── Network Speed Chart (works) ─────────────────────────────────────── -->
+    <!-- ─── Network Speed Chart ──────────────────────────────────────────────── -->
     <div class="card shadow-sm mb-4">
       <div class="card-header"><strong>Network Speed (Mb/s)</strong></div>
       <div class="card-body">
@@ -71,7 +87,7 @@
       </div>
     </div>
 
-    <!-- ─── Disk I/O Speed Chart (works) ────────────────────────────────────── -->
+    <!-- ─── Disk I/O Speed Chart ─────────────────────────────────────────────── -->
     <div class="card shadow-sm mb-4">
       <div class="card-header"><strong>Disk I/O Speed (MB/s)</strong></div>
       <div class="card-body">
@@ -79,7 +95,7 @@
       </div>
     </div>
 
-    <!-- ─── CPU‐Per‐Core Usage (%) Chart ─────────────────────────────────────── -->
+    <!-- ─── CPU Usage Chart ─────────────────────────────────────────────────── -->
     <div class="card shadow-sm mb-4">
       <div class="card-header"><strong>CPU Usage (%)</strong></div>
       <div class="card-body">
@@ -87,18 +103,19 @@
       </div>
     </div>
 
-    <!-- ─── Memory & Swap Usage (MB) Chart ──────────────────────────────────── -->
+    <!-- ─── Memory & Swap Usage Chart ───────────────────────────────────────── -->
     <div class="card shadow-sm mb-4">
       <div class="card-header"><strong>Memory &amp; Swap Usage (MB)</strong></div>
       <div class="card-body">
         <canvas id="memoryChart" height="200"></canvas>
       </div>
     </div>
+
   </div> <!-- /.container -->
 
   <!-- Bootstrap JS (optional) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Our polling + chart‐setup script -->
+  <!-- Your polling + chart‐setup script -->
   <script src="/js/history.js"></script>
 </body>
 </html>
