@@ -1,4 +1,3 @@
-// File: js/history.js
 document.addEventListener('DOMContentLoaded', () => {
   // ─── 1) DOM REFERENCES ────────────────────────────────────────────────────
   const timestampEl   = document.getElementById('timestamp');
@@ -20,9 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         title: { display: true, text: 'Elapsed (s)' },
         ticks: { autoSkip: true, maxTicksLimit: 12 }
       },
-      y: {
-        beginAtZero: true
-      }
+      y: { beginAtZero: true }
     },
     plugins: { legend: { position: 'top' } }
   };
@@ -31,109 +28,51 @@ document.addEventListener('DOMContentLoaded', () => {
     arr.push(v);
   }
 
-  // ─── 3) NETWORK CHART (unchanged) ────────────────────────────────────────
-  const netCtx     = document.getElementById('networkChart').getContext('2d');
-  let netDownload  = Array(MAX_POINTS).fill(0);
-  let netUpload    = Array(MAX_POINTS).fill(0);
+  // ─── CHART INITIALIZATIONS ───────────────────────────────────────────────
+  // Network
+  const netCtx = document.getElementById('networkChart').getContext('2d');
+  let netDownload = Array(MAX_POINTS).fill(0);
+  let netUpload   = Array(MAX_POINTS).fill(0);
   const netChart = new Chart(netCtx, {
     type: 'line',
     data: {
       labels,
       datasets: [
-        {
-          label: 'Download (Mb/s)',
-          data: netDownload,
-          borderColor: 'rgba(54,162,235,1)',
-          backgroundColor: 'rgba(54,162,235,0.1)',
-          fill: true,
-          tension: 0.2
-        },
-        {
-          label: 'Upload (Mb/s)',
-          data: netUpload,
-          borderColor: 'rgba(255,99,132,1)',
-          backgroundColor: 'rgba(255,99,132,0.1)',
-          fill: true,
-          tension: 0.2
-        }
+        { label: 'Download (Mb/s)', data: netDownload, fill: true, tension: 0.2 },
+        { label: 'Upload (Mb/s)',   data: netUpload,   fill: true, tension: 0.2 }
       ]
     },
-    options: {
-      ...baseOpts,
-      scales: {
-        ...baseOpts.scales,
-        y: { ...baseOpts.scales.y, title: { display: true, text: 'Mb/s' } }
-      }
-    }
+    options: baseOpts
   });
   let lastNetTotals = null;
 
-  // ─── 4) DISK CHART (unchanged) ───────────────────────────────────────────
-  const diskCtx  = document.getElementById('diskChart').getContext('2d');
-  let diskRead   = Array(MAX_POINTS).fill(0);
-  let diskWrite  = Array(MAX_POINTS).fill(0);
+  // Disk
+  const diskCtx = document.getElementById('diskChart').getContext('2d');
+  let diskRead  = Array(MAX_POINTS).fill(0);
+  let diskWrite = Array(MAX_POINTS).fill(0);
   const diskChart = new Chart(diskCtx, {
     type: 'line',
     data: {
       labels,
       datasets: [
-        {
-          label: 'Read (MB/s)',
-          data: diskRead,
-          borderColor: 'rgba(54,162,235,1)',
-          backgroundColor: 'rgba(54,162,235,0.1)',
-          fill: true,
-          tension: 0.2
-        },
-        {
-          label: 'Write (MB/s)',
-          data: diskWrite,
-          borderColor: 'rgba(255,206,86,1)',
-          backgroundColor: 'rgba(255,206,86,0.1)',
-          fill: true,
-          tension: 0.2
-        }
+        { label: 'Read (MB/s)',  data: diskRead,  fill: true, tension: 0.2 },
+        { label: 'Write (MB/s)', data: diskWrite, fill: true, tension: 0.2 }
       ]
     },
-    options: {
-      ...baseOpts,
-      scales: {
-        ...baseOpts.scales,
-        y: { ...baseOpts.scales.y, title: { display: true, text: 'MB/s' } }
-      }
-    }
+    options: baseOpts
   });
   let lastDiskTotals = null;
 
-  // ─── 5) CPU USAGE CHART (single‐series) ──────────────────────────────────
-  const cpuCtx       = document.getElementById('cpuChart').getContext('2d');
-  let cpuHistory     = Array(MAX_POINTS).fill(0);
+  // CPU Util history
+  const cpuCtx   = document.getElementById('cpuChart').getContext('2d');
+  let cpuHistory = Array(MAX_POINTS).fill(0);
   const cpuChart = new Chart(cpuCtx, {
     type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'CPU Util (%)',
-        data: cpuHistory,
-        borderColor: 'rgba(75,192,192,1)',
-        backgroundColor: 'rgba(75,192,192,0.1)',
-        fill: true,
-        tension: 0.2
-      }]
-    },
-    options: {
-      ...baseOpts,
-      scales: {
-        ...baseOpts.scales,
-        y: {
-          ...baseOpts.scales.y,
-          title: { display: true, text: '%' }
-        }
-      }
-    }
+    data: { labels, datasets: [{ label: 'CPU Util (%)', data: cpuHistory, fill: true, tension: 0.2 }] },
+    options: baseOpts
   });
 
-  // ─── 6) MEMORY & SWAP CHART ─────────────────────────────────────────────
+  // Memory & Swap
   const memCtx    = document.getElementById('memoryChart').getContext('2d');
   let memUsedArr  = Array(MAX_POINTS).fill(0);
   let memFreeArr  = Array(MAX_POINTS).fill(0);
@@ -141,136 +80,81 @@ document.addEventListener('DOMContentLoaded', () => {
   let bufferedArr = Array(MAX_POINTS).fill(0);
   let swapUsedArr = Array(MAX_POINTS).fill(0);
   let swapFreeArr = Array(MAX_POINTS).fill(0);
-
   const memoryChart = new Chart(memCtx, {
     type: 'line',
     data: {
       labels,
       datasets: [
-        { label: 'Mem Used',  data: memUsedArr,  tension: 0.2, fill: true },
-        { label: 'Mem Free',  data: memFreeArr,  tension: 0.2, fill: true },
-        { label: 'Cached',    data: cachedArr,   tension: 0.2, fill: true },
-        { label: 'Buffered',  data: bufferedArr, tension: 0.2, fill: true },
-        { label: 'Swap Used', data: swapUsedArr, tension: 0.2, fill: true },
-        { label: 'Swap Free', data: swapFreeArr, tension: 0.2, fill: true }
+        { label: 'Mem Used',  data: memUsedArr,  fill: true, tension: 0.2 },
+        { label: 'Mem Free',  data: memFreeArr,  fill: true, tension: 0.2 },
+        { label: 'Cached',    data: cachedArr,   fill: true, tension: 0.2 },
+        { label: 'Buffered',  data: bufferedArr, fill: true, tension: 0.2 },
+        { label: 'Swap Used', data: swapUsedArr, fill: true, tension: 0.2 },
+        { label: 'Swap Free', data: swapFreeArr, fill: true, tension: 0.2 }
       ]
     },
-    options: {
-      ...baseOpts,
-      scales: {
-        ...baseOpts.scales,
-        y: {
-          ...baseOpts.scales.y,
-          title: { display: true, text: 'MB' }
-        }
-      }
-    }
+    options: baseOpts
   });
 
-  // ─── 7) POLLING FUNCTIONS ─────────────────────────────────────────────────
-
-  // (a) General stats + timestamp
-  async function updateGeneralStats() {
+  // ─── SINGLE ENDPOINT POLLER ──────────────────────────────────────────────
+  async function updateAll() {
     try {
-      const res = await fetch('/api/stats/general');
+      const res = await fetch('/api/stats/all');
       if (!res.ok) throw new Error(res.status);
-      const d   = await res.json();
+      const d = await res.json();
 
-      // Timestamp
-      timestampEl.textContent = new Date().toLocaleTimeString();
+      // Timestamp from net_stats
+      timestampEl.textContent = new Date(d.net_stats.timestamp_ms).toLocaleTimeString();
 
-      // Update top‐box stats
-      loadAvgEl.textContent     = `${d.loadavg1.toFixed(2)}, ${d.loadavg5.toFixed(2)}, ${d.loadavg15.toFixed(2)}`;
-      cpuUtilEl.textContent     = `${d.cpu_util_percent.toFixed(1)}%`;
-      tasksInfoEl.textContent   = `total=${d.tasks_total}, running=${d.tasks_running}`;
-      memoryInfoEl.textContent  = `total=${d.memory.total_MB.toFixed(0)} MB, free=${d.memory.free_MB.toFixed(0)} MB, avail=${d.memory.available_MB.toFixed(0)} MB`;
-      buffersInfoEl.textContent = `buffers=${d.memory.buffers_MB.toFixed(0)} MB, cached=${d.memory.cached_MB.toFixed(0)} MB`;
-      swapInfoEl.textContent    = `total=${d.memory.swap_total_MB.toFixed(0)} MB, free=${d.memory.swap_free_MB.toFixed(0)} MB`;
-    } catch (e) {
-      console.error('general stats fetch failed', e);
-    }
-  }
+      // General stats
+      const ls = d.load_stats;
+      loadAvgEl.textContent     = `${ls.loadavg1.toFixed(2)}, ${ls.loadavg5.toFixed(2)}, ${ls.loadavg15.toFixed(2)}`;
+      cpuUtilEl.textContent     = `${ls.cpu_util_percent.toFixed(1)}%`;
+      tasksInfoEl.textContent   = `total=${ls.tasks_total}, running=${ls.tasks_running}`;
 
-  // (b) Network speed
-  async function updateNetwork() {
-    try {
-      const res = await fetch('/api/stats/network');
-      if (!res.ok) throw new Error(res.status);
-      const d   = await res.json();
+      // Memory boxes
+      const m = d.memory;
+      memoryInfoEl.textContent  = `total=${m.total_MB.toFixed(0)} MB, free=${m.free_MB.toFixed(0)} MB, avail=${m.available_MB.toFixed(0)} MB`;
+      buffersInfoEl.textContent = `buffers=${m.buffers_MB.toFixed(0)} MB, cached=${m.cached_MB.toFixed(0)} MB`;
+      swapInfoEl.textContent    = `total=${m.swap_total_MB.toFixed(0)} MB, free=${m.swap_free_MB.toFixed(0)} MB`;
+
+      // Network speeds
       if (lastNetTotals) {
-        pushTrim(netDownload, d.total_download_MB - lastNetTotals.total_download_MB);
-        pushTrim(netUpload,   d.total_upload_MB   - lastNetTotals.total_upload_MB);
+        pushTrim(netDownload, d.net_stats.total_download_MB - lastNetTotals.total_download_MB);
+        pushTrim(netUpload,   d.net_stats.total_upload_MB   - lastNetTotals.total_upload_MB);
         netChart.update();
       }
-      lastNetTotals = d;
-    } catch (e) {
-      console.error('network fetch failed', e);
-    }
-  }
+      lastNetTotals = d.net_stats;
 
-  // (c) Disk I/O
-  async function updateDisk() {
-    try {
-      const res = await fetch('/api/stats/disk');
-      if (!res.ok) throw new Error(res.status);
-      const d   = await res.json();
+      // Disk I/O speeds
       if (lastDiskTotals) {
-        pushTrim(diskRead,  d.total_read_MB  - lastDiskTotals.total_read_MB);
-        pushTrim(diskWrite, d.total_write_MB - lastDiskTotals.total_write_MB);
+        pushTrim(diskRead,  d.disc_stats.total_read_MB  - lastDiskTotals.total_read_MB);
+        pushTrim(diskWrite, d.disc_stats.total_write_MB - lastDiskTotals.total_write_MB);
         diskChart.update();
       }
-      lastDiskTotals = d;
-    } catch (e) {
-      console.error('disk fetch failed', e);
-    }
-  }
+      lastDiskTotals = d.disc_stats;
 
-  // (d) CPU history (single‐series)
-  async function updateCpuHistory() {
-    try {
-      const res = await fetch('/api/stats/general');
-      if (!res.ok) throw new Error(res.status);
-      const d   = await res.json();
-      pushTrim(cpuHistory, d.cpu_util_percent);
+      // CPU history
+      pushTrim(cpuHistory, ls.cpu_util_percent);
       cpuChart.update();
-    } catch (e) {
-      console.error('cpu history fetch failed', e);
-    }
-  }
 
-  // (e) Memory & swap history
-  async function updateMemoryHistory() {
-    try {
-      const res = await fetch('/api/stats/general');
-      if (!res.ok) throw new Error(res.status);
-      const d   = await res.json();
-      const m   = d.memory;
-      const used    = m.total_MB - m.free_MB;
-      const swapU   = m.swap_total_MB - m.swap_free_MB;
-
-      pushTrim(memUsedArr,  used);
+      // Memory history
+      const usedMB = m.total_MB - m.free_MB;
+      const swapUsedMB = m.swap_total_MB - m.swap_free_MB;
+      pushTrim(memUsedArr,  usedMB);
       pushTrim(memFreeArr,  m.free_MB);
       pushTrim(cachedArr,   m.cached_MB);
       pushTrim(bufferedArr, m.buffers_MB);
-      pushTrim(swapUsedArr, swapU);
+      pushTrim(swapUsedArr, swapUsedMB);
       pushTrim(swapFreeArr, m.swap_free_MB);
-
       memoryChart.update();
+
     } catch (e) {
-      console.error('memory history fetch failed', e);
+      console.error('Failed to fetch all stats:', e);
     }
   }
 
-  // ─── 8) INITIALIZE + START POLLS ─────────────────────────────────────────
-  updateGeneralStats();
-  updateNetwork();
-  updateDisk();
-  updateCpuHistory();
-  updateMemoryHistory();
-
-  setInterval(updateGeneralStats,    1000);
-  setInterval(updateNetwork,         1000);
-  setInterval(updateDisk,            1000);
-  setInterval(updateCpuHistory,      1000);
-  setInterval(updateMemoryHistory,   1000);
+  // Initialize and poll every second
+  updateAll();
+  setInterval(updateAll, 1000);
 });
