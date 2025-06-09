@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 
 void print_cpu_stats(cpu_stats* cpu_container) {
@@ -232,6 +233,26 @@ size_t capacity = 10000;
     fclose(fp);
     return data;
 }
+
+int is_valid_disk(const char* dev){
+    size_t len = strlen(dev);
+
+    if (strncmp(dev, "sd", 2) == 0){
+    // sd partition check 
+        if(!isalpha(dev[len-1])){
+            return 0;
+        }
+    }
+    //nvme partion check
+    if (strncmp(dev,"nvme",4) == 0 && strchr(dev,'p')!=NULL){
+        return 0;
+    }
+    // not disks
+    if (strncmp(dev, "loop", 4) == 0 || strncmp(dev, "ram", 3) == 0 || strncmp(dev, "sr", 2) == 0 || strncmp(dev, "dm-", 3) == 0){
+        return 0;
+    }
+    return 1;
+}
 void read_disk_stats(disk_stats* disk) {
     FILE* fp = fopen("/proc/diskstats", "r");
     if (!fp) {
@@ -248,8 +269,7 @@ void read_disk_stats(disk_stats* disk) {
         sscanf(line, "%d %d %31s", &major, &minor, dev);
 
         // Filter only full disks (e.g., "sda", "sdb", "nvme0n1"), exclude loops/partitions
-        if ((strncmp(dev, "sda", 3) == 0 || strncmp(dev, "nvme", 4) == 0) &&
-            strchr(dev, 'p') == NULL && strncmp(dev, "loop", 4) != 0 && strncmp(dev, "ram", 3) != 0) {
+        if (is_valid_disk(dev)) {
 
             printf("Matched line: %s", line);
             printf("Matched disk: %s\n", dev);
