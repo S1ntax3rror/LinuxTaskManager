@@ -78,7 +78,7 @@ int handle_process_list(struct MHD_Connection *conn) {
 }
 
 /**
- * Handle GET /api/processes
+ * Handle GET /api/cpu_mem
  * Return a JSON array of all processes (trimmed_info).
  */
 int handle_cores_and_memory(struct MHD_Connection *conn) {
