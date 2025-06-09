@@ -240,14 +240,14 @@ int is_valid_disk(const char* dev){
     if (strncmp(dev, "sd", 2) == 0){
     // sd partition check 
         if(!isalpha(dev[len-1])){
-            return 0;
+            return 1;
         }
     }
     //nvme partion check
     if (strncmp(dev,"nvme",4) == 0 && strchr(dev,'p')!=NULL){
-        return 0;
+        return 1;
     }
-    return 1;
+    return 0;
 }
 int read_disk_stats(disk_stats disk[],int max_disk) {
     FILE* fp = fopen("/proc/diskstats", "r");
