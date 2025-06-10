@@ -1,6 +1,6 @@
 # LinuxTaskManager
 
-A complete, modular Linux process monitor & manager with C core, ANSI‑CLI, JSON daemon, Spring Boot REST API, and Thymeleaf web UI.
+A complete, modular Linux process monitor & manager with C core, JSON daemon, Spring Boot REST API, and Thymeleaf web UI.
 
 ## Features
 - **C core library**: parses `/proc` into `proc_stat` structs  
@@ -8,10 +8,23 @@ A complete, modular Linux process monitor & manager with C core, ANSI‑CLI, JSO
 - **Spring Boot REST API**: exposes process data to the web front end  
 - **Thymeleaf Web UI**: dashboard, filtering, and controls in the browser
 
-## Prerequisites to run our projects are:
-- Java 17+ (OpenJDK or Oracle JDK)
-- Maven
-- C toolchain (gcc, make)
+## Dependencies and Prerequisites
+
+### C Libraries
+- **libmicrohttpd** (embedded HTTP server)  
+- **libcjson** (JSON parsing/serialization)  
+- **POSIX APIs** (e.g. `<sys/time.h>`, `<signal.h>`, `<sys/resource.h>`)
+
+### Java / Spring Dependencies
+*(managed via Maven `pom.xml`)*  
+- **Spring Boot Starter Web** (REST API & Thymeleaf)  
+- **Spring Boot Starter Thymeleaf**  
+- **Jackson** (JSON serialization)
+
+### Prerequisites to run our projects are:
+- **gcc**, **make** (C toolchain)  
+- **Maven**  
+- **Java 17+** (OpenJDK or Oracle JDK)
 
 ## How to run it:
 Inside the root folder OS_TeamProject/LinuxTaskManager/ run following command to initiate all make files:
