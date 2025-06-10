@@ -1,5 +1,5 @@
 package com.model;
-
+// java-service/src/main/java/com/model/ProcessDTO.java
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;

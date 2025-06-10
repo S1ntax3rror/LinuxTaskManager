@@ -29,7 +29,7 @@ public class ApiProcessService {
     }
 
     public void sendSignal(int pid, String cmd) {
-        SignalRequest req = new SignalRequest();
+        SignalRequestDTO req = new SignalRequestDTO();
         req.setCmd(cmd);
         rest.postForLocation(
             String.format("%s/processes/%d/signal", baseUrl, pid),
@@ -38,7 +38,7 @@ public class ApiProcessService {
     }
 
     public void renice(int pid, int nice) {
-        ReniceRequest req = new ReniceRequest();
+        ReniceRequestDTO req = new ReniceRequestDTO();
         req.setNice(nice);
         rest.postForLocation(
             String.format("%s/processes/%d/renice", baseUrl, pid),
@@ -47,7 +47,7 @@ public class ApiProcessService {
     }
 
     public void limitCpu(int pid, int secs) {
-        LimitRequest req = new LimitRequest();
+        LimitRequestDTO req = new LimitRequestDTO();
         req.setLimit(secs);
         rest.postForLocation(
             String.format("%s/processes/%d/limit/cpu", baseUrl, pid),
@@ -56,7 +56,7 @@ public class ApiProcessService {
     }
 
     public void limitRam(int pid, int mb) {
-        LimitRequest req = new LimitRequest();
+        LimitRequestDTO req = new LimitRequestDTO();
         req.setLimit(mb);
         rest.postForLocation(
             String.format("%s/processes/%d/limit/ram", baseUrl, pid),

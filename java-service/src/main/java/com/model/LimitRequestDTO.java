@@ -7,6 +7,6 @@ import lombok.Data;
  * For CPU: seconds; for RAM: megabytes.
  */
 @Data
-public class LimitRequest {
+public class LimitRequestDTO {
     private int limit;
 }

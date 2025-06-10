@@ -25,7 +25,7 @@ public class ProcessController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void signal(
             @PathVariable int pid,
-            @RequestBody(required = false) SignalRequest body
+            @RequestBody(required = false) SignalRequestDTO body
     ) {
         // Default to "KILL" if no body or empty cmd
         String cmd = "KILL";
@@ -42,21 +42,21 @@ public class ProcessController {
     @PostMapping("/{pid}/renice")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void renice(@PathVariable int pid,
-                       @RequestBody ReniceRequest body) {
+                       @RequestBody ReniceRequestDTO body) {
         svc.renice(pid, body.getNice());
     }
 
     @PostMapping("/{pid}/limit/cpu")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void limitCpu(@PathVariable int pid,
-                         @RequestBody LimitRequest body) {
+                         @RequestBody LimitRequestDTO body) {
         svc.limitCpu(pid, body.getLimit());
     }
 
     @PostMapping("/{pid}/limit/ram")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void limitRam(@PathVariable int pid,
-                         @RequestBody LimitRequest body) {
+                         @RequestBody LimitRequestDTO body) {
         svc.limitRam(pid, body.getLimit());
     }
 }
