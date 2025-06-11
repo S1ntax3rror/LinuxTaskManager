@@ -3,9 +3,9 @@
 /home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/controller/ProcessController.java
 /home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/controller/StatsController.java
 /home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/controller/ViewController.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/LimitRequest.java
+/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/LimitRequestDTO.java
 /home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/ProcessDTO.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/ReniceRequest.java
-/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/SignalRequest.java
+/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/ReniceRequestDTO.java
+/home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/model/SignalRequestDTO.java
 /home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/service/ApiProcessService.java
 /home/manu/OS_TeamProject/LinuxTaskManager/java-service/src/main/java/com/service/ApiStatsService.java

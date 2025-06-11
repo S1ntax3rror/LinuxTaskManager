@@ -1,11 +1,8 @@
 com/controller/ViewController.class
-com/model/LimitRequest.class
 com/service/ApiStatsService.class
 com/config/RestConfig.class
 com/service/ApiProcessService.class
 com/model/ProcessDTO.class
-com/model/SignalRequest.class
 com/LinuxTaskManagerApplication.class
-com/model/ReniceRequest.class
 com/controller/StatsController.class
 com/controller/ProcessController.class
