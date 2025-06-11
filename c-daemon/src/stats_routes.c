@@ -100,8 +100,8 @@ static int handle_disk_stats(struct MHD_Connection *conn) {
     general_stat gs = get_cpu_stats();
     cJSON *root = cJSON_CreateObject();
 
-    cJSON_AddNumberToObject(root, "total_read_MB", gs.disk.read_MB);
-    cJSON_AddNumberToObject(root, "total_write_MB", gs.disk.write_MB);
+    cJSON_AddNumberToObject(root, "total_read_MB", gs.total_disk_read_MB);
+    cJSON_AddNumberToObject(root, "total_write_MB", gs.total_disk_write_MB);
 
     return send_json_response(conn, root);
 }

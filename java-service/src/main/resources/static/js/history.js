@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         title: { display: true, text: 'Elapsed (s)' },
         ticks: { autoSkip: true, maxTicksLimit: 12 }
       },
-      y: { beginAtZero: true }
+      y: { beginAtZero: true } 
     },
     plugins: { legend: { position: 'top' } }
   };
