@@ -2,6 +2,8 @@
 
 A complete, modular Linux process monitor & manager with C core, JSON daemon, Spring Boot REST API, and Thymeleaf web UI.
 
+You can find the report and the presentation in the docs folder.
+
 ## Features
 - **C core library**: parses `/proc` into `proc_stat` structs  
 - **Background daemon**: polls core and serves JSON over a UNIX socket  
@@ -33,7 +35,7 @@ Inside the root folder OS_TeamProject/LinuxTaskManager/ run following command to
 After that navigate to the c-daemon folder and start the server with this command:
 - ./http_server 
 
-The last step is to launch the frontend. To do this navigate to the package java-service and make sure that you have mvn installed on your machine. Then run following command in the terminal:
+The last step is to launch the frontend. To do this you need to navigate to the package java-service and make sure that you have mvn installed on your machine. Then run following command in the terminal:
 
 - mvn spring-boot:run -Dspring-boot.run.profiles=api
 
